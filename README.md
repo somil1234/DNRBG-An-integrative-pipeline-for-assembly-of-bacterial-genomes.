@@ -64,8 +64,12 @@ Available at https://busco.ezlab.org/
  
  Installation of "mash" "skesa" "spades" "seqtk" "unicycler" "plentyofbugs" is far easier in a conda environment. Therefore we try to provide a user with an alternative if they are not installed, the 
  scripts will try to install this for the user in a conda environment "install_env", though some may not be installed the user has to install them manually in the conda environment "install_env". If the 
- required programs are correctly installed and still programmed prompt that "the following program cannot be found" please add the install program in your path.
+ required programs are correctly installed and still programmed prompt that "the following program cannot be found" Please add the install program in your path, if all requirements are fulfilled correctly
+ the program will skip the installation process and the pipeline will continue.
 
  **PARAMETERS**
 
-   
+  We have discussed the parameters in detail in our methodology section. However, for convenience, the necessities will be described  here, which users may consider default but one should keep in mind 
+  that the parameters may change according to user requirements, therefore in our scripts we do not provide the flag "--default". Users have to provide parameters interactively.
+
+  
