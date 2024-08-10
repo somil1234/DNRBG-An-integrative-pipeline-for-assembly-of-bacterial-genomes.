@@ -8,11 +8,12 @@ Selection of best reference: The best reference genome is identified, and the pe
 
 Reference-based scaffolding:  Reference-based scaffolding is conducted.
 
-######################################################################
+
 
 **Installation**
 
 This pipeline is available as a LINUX executable.**
+
 
 **Dependencies**
 
@@ -48,13 +49,13 @@ Available at https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml
 10. **BUSCO**
 Available at https://busco.ezlab.org/
 
-####################################################################
 
 **USAGE** 
 
 	./genome_assembly fastq_1 fastq_2 
  
  where fastq_1 and fastq_2 are raw sequences, paired-end read one and two, respectively. 
+
 
  **KEYNOTES FOR THE USER **
 
@@ -66,6 +67,7 @@ Available at https://busco.ezlab.org/
  scripts will try to install this for the user in a conda environment "install_env", though some may not be installed the user has to install them manually in the conda environment "install_env". If the 
  required programs are correctly installed and still programmed prompt that "the following program cannot be found" Please add the install program in your path, if all requirements are fulfilled correctly
  the program will skip the installation process and the pipeline will continue.
+
 
  **PARAMETERS**
 
