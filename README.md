@@ -69,7 +69,7 @@ Available at https://busco.ezlab.org/
 
  **PARAMETERS**
 
-  We have discussed the parameters in detail in our methodology section. However, for convenience, the necessities will be described  here, which users may consider default but one should keep in mind 
+  We have discussed the parameters in detail in our methodology section. However, for convenience, users may consider default but one should keep in mind 
   that the parameters may change according to user requirements, therefore in our scripts we do not provide the flag "--default". Users have to provide parameters interactively.
 
   
