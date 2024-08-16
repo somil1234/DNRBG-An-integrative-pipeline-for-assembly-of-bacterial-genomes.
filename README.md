@@ -34,7 +34,7 @@ Available at https://ccb.jhu.edu/software/FLASH/
 5. **Unicycler**
 Available at https://github.com/rrwick/Unicycler
 
-6. **OUAST**
+6. **QUAST**
 Available at https://github.com/ablab/quast
 
 7. **Plentyofbugs**
