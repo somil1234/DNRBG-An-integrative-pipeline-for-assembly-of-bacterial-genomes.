@@ -52,7 +52,7 @@ Available at https://busco.ezlab.org/
 
 **USAGE** 
 
-	./genome_assembly.sh fastq_1 fastq_2 
+	./reference_guided_assembly.sh fastq_1 fastq_2 
  
  where fastq_1 and fastq_2 are raw sequences, paired-end read one and two, respectively. 
 
