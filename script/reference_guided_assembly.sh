@@ -165,14 +165,12 @@ cd "$current_dir" &&
 # Make directory for unicycler output
 # Make directory for unicycler output
 mkdir unicycler.out && cd unicycler.out || exit
-# Prompt user for number of threads to use
-read -rp "Enter the number of threads to use for Unicycler: " threads
 # Check if both unicycler and spades are installed
 if command -v spades &>/dev/null && command -v unicycler &>/dev/null; then
 echo -e "${green}Both spades and unicycler are installed.${reset}"
                unicycler  -1 "$trimmomatic_path/output_1P.fq" \
                           -2 "$trimmomatic_path/output_2P.fq" -s "$flash_path/out.extendedFrags.fastq" \
-                          -o assembly --threads "$threads" || exit 1
+                          -o assembly  || exit 1
                                      fi || exit
 # Check if neither unicycler nor spades are installed
 if ! command -v spades &>/dev/null && ! command -v unicycler &>/dev/null; then
@@ -182,7 +180,7 @@ read -rp "Please provide absolute path to unicycler: " unicycler
 echo -e "${green}Running unicycler.${reset}"
         "$unicycler" -1 "$trimmomatic_path/output_1P.fq" \
                     -2 "$trimmomatic_path/output_2P.fq" -s "$flash_path/out.extendedFrags.fastq" \
-                    -o assembly --threads "$threads" || exit 1
+                    -o assembly || exit 1
 fi || exit
 cd assembly &&
 assemblypath=$(pwd)
@@ -433,7 +431,7 @@ fi || exit
 # Check if all the command exist
 # Check for flash if not found store its path in a variable
 if command -v flash &>/dev/null; then
-echo "${green}flash is installed...${reset}"
+echo -e "${green}flash is installed...${reset}"
 else
 #ask for flash path
 echo -e "${yellow} Please provide absolute path to flash...${reset}"
@@ -504,16 +502,14 @@ flash_pid=$!
 wait $flash_pid
 # Run unicycler command
 if command -v unicycler &>/dev/null && command -v spades &>/dev/null; then
-read -rp "Please specify the number of threads to use:" thread
-unicycler -1 "$denovo_assembly_path/out.notCombined_1.fastq" -2 "$denovo_assembly_path/out.notCombined_2.fastq" -s "$denovo_assembly_path/out.extendedFrags.fastq" -o unicycler.out --threads "$threads"
+unicycler -1 "$denovo_assembly_path/out.notCombined_1.fastq" -2 "$denovo_assembly_path/out.notCombined_2.fastq" -s "$denovo_assembly_path/out.extendedFrags.fastq" -o unicycler.out 
 else
 echo -e "${yellow} Please provide absolute path to unicycler...${reset}"
 read -rp "Please provide your unicycler path here : " unicycler
 echo -e "${yellow} Please provide your absolute spades path here...${reset}"
 read -rp "Please provide your spades path here : " spadespath
-read -rp "Please specify the number of threads to use:" thread
 echo -e "${green} executing unicycler...${reset}"
-"$unicycler" --spades_path "$spadespath" -1 "$denovo_assembly_path/out.notCombined_1.fastq" -2 "$denovo_assembly_path/out.notCombined_2.fastq" -s "$denovo_assembly_path/out.extendedFrags.fastq" -o unicycler.out --threads "$threads"
+"$unicycler" --spades_path "$spadespath" -1 "$denovo_assembly_path/out.notCombined_1.fastq" -2 "$denovo_assembly_path/out.notCombined_2.fastq" -s "$denovo_assembly_path/out.extendedFrags.fastq" -o unicycler.out 
 fi || exit
 cd unicycler.out || exit
 assemblypath=$(pwd)
