@@ -427,8 +427,8 @@ else
 echo "${red}Error: Bowtie2 is not installed. Please install Bowtie2 and try again.${reset}"
 exit 1
 # Change to current directory
-cd "$current_dir" || exit
-fi
+cd "$current_dir" 
+fi || exit 
 #########################################################################
 # Check if all the command exist
 # Check for flash if not found store its path in a variable
