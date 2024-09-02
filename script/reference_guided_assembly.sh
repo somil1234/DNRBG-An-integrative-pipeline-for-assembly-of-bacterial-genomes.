@@ -65,7 +65,7 @@ echo -e "${green} fastqc run sucessfully..."
 # use multiqc to compile results
 mkdir multiqc.out && #create a directory named multiqc.out
 # navigate into the directory named multiqc.out
-if command -v multiqc $>/dev/null; then # check for multiqc programme
+if command -v multiqc &>/dev/null; then # check for multiqc programme
 echo -e "${green} multiqc programme is installed...${reset}" # if found run multiqc here
 echo -e "${green} executing multiqc...${reset}"
 multiqc  "$current_dir/fastqc.out" -o "$current_dir/multiqc.out" || exit 1
@@ -84,7 +84,7 @@ echo -e "${green} multiqc run sucessfully...${reset}"
 ###############################################################
 # Use trimmomatic to trim unpaired reads and remove adapter sequences
 # Check for java
-if command -v java $>/dev/null; then
+if command -v java &>/dev/null; then
 echo -e "${green} java installed...${reset}"
 else # if not installed ask for installation
 echo -e "${red}Please install java and check if installed already check if it is present in your path..."
@@ -95,7 +95,7 @@ mkdir trimmomatic.out &&
 # Check for trimmomatic
 # Taking parameters using if else statement
 # Navigate to trimmomatic.out directory and captute its path
-if command -v trimmomatic $>/dev/null; then # check for trimmomatic
+if command -v trimmomatic &>/dev/null; then # check for trimmomatic
 echo -e "${green} Trimmomatic programme is installed...${reset}"
 echo -e "${yellow} Please provide the relevent parameters for the tools...${reset}"
 read -rp "Please provide number of threads to run the tool : " thread
