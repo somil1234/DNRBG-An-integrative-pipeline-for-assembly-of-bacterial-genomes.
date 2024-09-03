@@ -552,15 +552,15 @@ fi
 cd "$current_dir" || exit
 ###################################################
 # Chande path to reference based assembly
-cd reference_base_assembly || exit
-reference_base_assembly_path=$(pwd) || exit
+cd reference_based_assembly || exit
+reference_based_assembly_path=$(pwd) || exit
 cd "$current_dir" || exit
 # Use BUSCO for checking completeness
 # Make BUSCO directory
 mkdir busco || exit
 cd busco || exit
 # look for busco if installed
-reference_base_assembly_path=$(pwd) || exit
+reference_based_assembly_path=$(pwd) || exit
 cd "$current_dir" || exit
 # Use BUSCO for checking completeness
 # Change to busco directory
@@ -569,7 +569,7 @@ cd busco || exit
 if command -v busco &>/dev/null; then
 echo "${green}BUSCO is installed.${reset}"
 read -rp "Specify the name of the BUSCO lineage to be used: " busco_linage
-busco -i "$reference_base_assembly_path"/sample_extendedcontig.fasta -m genome  -l "$busco_linage"
+busco -i "$reference_based_assembly_path"/sample_extendedcontig.fasta -m genome  -l "$busco_linage"
 busco_pid=$!
 wait $busco_pid
 else
