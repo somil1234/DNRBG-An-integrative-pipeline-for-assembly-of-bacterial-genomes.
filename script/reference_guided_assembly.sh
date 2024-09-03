@@ -558,14 +558,10 @@ cd "$current_dir" || exit
 # Use BUSCO for checking completeness
 # Make BUSCO directory
 mkdir busco || exit
-cd busco || exit
-# look for busco if installed
-reference_based_assembly_path=$(pwd) || exit
-cd "$current_dir" || exit
-# Use BUSCO for checking completeness
 # Change to busco directory
 cd busco || exit
 # look for busco if installed
+# Use BUSCO for checking completeness
 if command -v busco &>/dev/null; then
 echo "${green}BUSCO is installed.${reset}"
 read -rp "Specify the name of the BUSCO lineage to be used: " busco_linage
