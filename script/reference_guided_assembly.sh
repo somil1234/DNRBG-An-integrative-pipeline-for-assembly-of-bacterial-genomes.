@@ -570,7 +570,7 @@ cd busco || exit
 if command -v busco &>/dev/null; then
 echo "${green}BUSCO is installed.${reset}"
 read -rp "Specify the name of the BUSCO lineage to be used: " busco_linage
-busco -i "$reference_base_assembly_path"/extendedContigs.fa -m genome  -l "$busco_linage"
+busco -i "$reference_base_assembly_path"/sample_extendedcontig.fasta -m genome  -l "$busco_linage"
 busco_pid=$!
 wait $busco_pid
 else
