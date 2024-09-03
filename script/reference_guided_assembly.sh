@@ -563,8 +563,7 @@ cd busco || exit
 reference_base_assembly_path=$(pwd) || exit
 cd "$current_dir" || exit
 # Use BUSCO for checking completeness
-# Make BUSCO directory
-mkdir busco || exit
+# Change to busco directory
 cd busco || exit
 # look for busco if installed
 if command -v busco &>/dev/null; then
