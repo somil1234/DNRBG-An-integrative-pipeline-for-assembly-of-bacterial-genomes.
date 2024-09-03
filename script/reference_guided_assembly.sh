@@ -553,7 +553,7 @@ cd "$current_dir" || exit
 ###################################################
 # Chande path to reference based assembly
 cd reference_base_assembly || exit
-reference_based_assembly_path=$(pwd) || exit
+reference_base_assembly_path=$(pwd) || exit
 cd "$current_dir" || exit
 # Use BUSCO for checking completeness
 # Make BUSCO directory
