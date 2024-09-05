@@ -192,8 +192,8 @@ cd "$current_dir" || exit
 #######################################################################################
 # Assessment of Assembly Quality using QUAST
 # Make quast output directory
-mkdir quast.out &&
-cd quast.out &&
+mkdir quast_out &&
+cd quast_out &&
 # Check if quast is installed
 if command -v quast &>/dev/null; then
 echo -e "${green}quast is installed...${reset}"
