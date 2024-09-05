@@ -91,10 +91,10 @@ echo -e "${red}Please install java and check if installed already check if it is
 fi || exit
 # Make directory for trimmomatic
 echo -e "${green}makeing output directory for trimmomatic...${reset}"
-mkdir trimmomatic.out &&
+mkdir trimmomatic_out &&
 # Check for trimmomatic
 # Taking parameters using if else statement
-# Navigate to trimmomatic.out directory and captute its path
+# Navigate to trimmomatic_out directory and captute its path
 if command -v trimmomatic &>/dev/null; then # check for trimmomatic
 echo -e "${green} Trimmomatic programme is installed...${reset}"
 echo -e "${yellow} Please provide the relevent parameters for the tools...${reset}"
@@ -125,10 +125,10 @@ fi || exit
 # Wait for the command to be compleated
 trimmomatic_pid=$!
 wait $trimmomatic_pid
-# Move all output  to trimmomatic.out directory
-mv output_1P.fq output_1U.fq output_2P.fq output_2U.fq trimmomatic.out/ &&
-# Capturing path of trimmomatic.out directory
-cd trimmomatic.out && # navigate to trimmomatic directory
+# Move all output  to trimmomatic_out directory
+mv output_1P.fq output_1U.fq output_2P.fq output_2U.fq trimmomatic_out/ &&
+# Capturing path of trimmomatic_out directory
+cd trimmomatic_out && # navigate to trimmomatic directory
 trimmomatic_path=$(pwd) && # capturing directory path of trimmed reads
 cd "$current_dir" || exit 1
 #########################################################################################################
@@ -214,7 +214,7 @@ echo -e "${green} Phase 1 complete!${reset}"
 # Phase 2
 ##################################################################################################
 cd "$current_dir" || exit
-cd trimmomatic.out || exit # navigate to trimmomatic.out directory
+cd trimmomatic_out || exit # navigate to trimmomatic_out directory
 trimmomatic_output_path=$(pwd) # capturing path
 cd "$current_dir" || exit
 # ask for path to reference genome
@@ -411,8 +411,8 @@ bowtie2build_pid=$!
 wait $bowtie2build_pid
 # Change to current directory
 cd "$current_dir" || exit
-# Change path to trimmomatic.out
-cd trimmomatic.out &&
+# Change path to trimmomatic_out
+cd trimmomatic_out &&
 trimmomatic_output_path=$(pwd) &&
 # Change to current directory
 cd "$current_dir" || exit
@@ -475,7 +475,7 @@ mkdir denovo_assembly || exit
 # Store the original directory
 cd "$current_dir" || exit 
 # Denovo Assembly
-cd trimmomatic.out || exit
+cd trimmomatic_out || exit
 paired_read=$(pwd) || exit
 cd "$current_dir"  || exit
 ######################################################################################
@@ -523,7 +523,7 @@ cd "$current_dir" || exit
 cd "$current_dir"/plentyofbugs.out/assembly/ || exit
 contigpath=$(pwd)
 cd "$current_dir" || exit
-cd trimmomatic.out &&
+cd trimmomatic_out &&
 trimmed_read=$(pwd)
 cd "$current_dir" || exit
 # make directory for reference based assembly
