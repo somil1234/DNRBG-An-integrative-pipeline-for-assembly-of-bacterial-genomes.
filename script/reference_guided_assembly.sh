@@ -164,7 +164,7 @@ cd "$current_dir" &&
 # Using if else statement to check and run command
 # Make directory for unicycler output
 # Make directory for unicycler output
-mkdir unicycler.out && cd unicycler.out || exit
+mkdir unicycler_out && cd unicycler_out || exit
 # Check if both unicycler and spades are installed
 if command -v spades &>/dev/null && command -v unicycler &>/dev/null; then
 echo -e "${green}Both spades and unicycler are installed.${reset}"
@@ -502,16 +502,16 @@ flash_pid=$!
 wait $flash_pid
 # Run unicycler command
 if command -v unicycler &>/dev/null && command -v spades &>/dev/null; then
-unicycler -1 "$denovo_assembly_path/out.notCombined_1.fastq" -2 "$denovo_assembly_path/out.notCombined_2.fastq" -s "$denovo_assembly_path/out.extendedFrags.fastq" -o unicycler.out 
+unicycler -1 "$denovo_assembly_path/out.notCombined_1.fastq" -2 "$denovo_assembly_path/out.notCombined_2.fastq" -s "$denovo_assembly_path/out.extendedFrags.fastq" -o unicycler_out 
 else
 echo -e "${yellow} Please provide absolute path to unicycler...${reset}"
 read -rp "Please provide your unicycler path here : " unicycler
 echo -e "${yellow} Please provide your absolute spades path here...${reset}"
 read -rp "Please provide your spades path here : " spadespath
 echo -e "${green} executing unicycler...${reset}"
-"$unicycler" --spades_path "$spadespath" -1 "$denovo_assembly_path/out.notCombined_1.fastq" -2 "$denovo_assembly_path/out.notCombined_2.fastq" -s "$denovo_assembly_path/out.extendedFrags.fastq" -o unicycler.out 
+"$unicycler" --spades_path "$spadespath" -1 "$denovo_assembly_path/out.notCombined_1.fastq" -2 "$denovo_assembly_path/out.notCombined_2.fastq" -s "$denovo_assembly_path/out.extendedFrags.fastq" -o unicycler_out 
 fi || exit
-cd unicycler.out || exit
+cd unicycler_out || exit
 assemblypath=$(pwd)
 # Return to the original directory
 cd "$current_dir" || exit
