@@ -42,10 +42,10 @@ fi
 #Read Quality Assessment using FastQC
 if command -v fastqc &>/dev/null; then # check for the fastqc programme
 echo -e "${green}fastqc programme in installed...${reset}" # if found run fastqc here
-mkdir fastqc.out && # make fastqc output folder
+mkdir fastqc_out && # make fastqc output folder
 export LC_ALL=C &&
 echo -e "${green}executing fastqc...${reset}" &&
-fastqc -o fastqc.out -f fastq "$forward_read" "$reverse_read" || exit 1 # running fastqc .....
+fastqc -o fastqc_out -f fastq "$forward_read" "$reverse_read" || exit 1 # running fastqc .....
 else
 # if not found ask for path and run fastqc here
 echo -e "${red}fastqc programme is not found please check this programme is eighter installed or present in your path...${reset}"
@@ -53,9 +53,9 @@ echo -e "${yellow}please provide absolute path to the executable....${reset}"
 read -rp "Pleae provide absolue path to fastqc executable here : " fastqc
 echo -e "${green}Making fastqc output folder...${reset}"
 export LC_ALL=C &&
-mkdir fastqc.out && # make fastqc output folder
+mkdir fastqc_out && # make fastqc output folder
 echo -e "${green}executing fastqc...${reset}"
-"$fastqc" -o fastqc.out -f fastq "$forward_read" "$reverse_read" || exit 1
+"$fastqc" -o fastqc_out -f fastq "$forward_read" "$reverse_read" || exit 1
 wait for command to run using wait command
 fastqc_pid=$!
 wait $fastqc_pid
@@ -68,13 +68,13 @@ mkdir multiqc.out && #create a directory named multiqc.out
 if command -v multiqc &>/dev/null; then # check for multiqc programme
 echo -e "${green} multiqc programme is installed...${reset}" # if found run multiqc here
 echo -e "${green} executing multiqc...${reset}"
-multiqc  "$current_dir/fastqc.out" -o "$current_dir/multiqc.out" || exit 1
+multiqc  "$current_dir/fastqc_out" -o "$current_dir/multiqc.out" || exit 1
 else # if not found ask for path and run multiqc here
 echo -e "${red} multiqc programme is not found please check this programme is eighter installed or present in your path...${reset}"
 echo -e "${yellow} please provide absolute path to the multiqc executable....${reset}"
 read -rp "Pleae provide absolute path to multiqc executable here :" multiqc
 echo -e "${green} executing multiqc...${reset}"
-"$multiqc" -o "$current_dir/fastqc.out" ../multiqc.out || exit 1
+"$multiqc" -o "$current_dir/fastqc_out" ../multiqc.out || exit 1
 cd "$current_dir" &&
 # Wait for command to run using wait command
 multiqc_pid=$!
