@@ -402,9 +402,9 @@ mkdir bowtie2.out || exit
 cd bowtie2.out  || exit
 # Do percentage alignment calculations
 if command -v bowtie2  &>/dev/null; then
-echo "${green}Bowtie2 is installed${reset}"
-echo "${green}Executing Bowtie2${reset}"
-echo "${green}Indexing reference genome${reset}"
+echo -e "${green}Bowtie2 is installed${reset}"
+echo -e "${green}Executing Bowtie2${reset}"
+echo -e "${green}Indexing reference genome${reset}"
 # Indexing reference genomes
 bowtie2-build -f "$reference_path"  reference_index &&
 bowtie2build_pid=$!
