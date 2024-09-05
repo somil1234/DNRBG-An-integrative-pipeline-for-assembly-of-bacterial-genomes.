@@ -397,9 +397,9 @@ reference_path=$(cat best_reference | awk '{print $1}') &&
 # Change path to current directory
 cd "$current_dir" || exit
 # Make bowtie2 directory
-mkdir bowtie2.out || exit
+mkdir bowtie2_out || exit
 # Change directory to bowtie2
-cd bowtie2.out  || exit
+cd bowtie2_out  || exit
 # Do percentage alignment calculations
 if command -v bowtie2  &>/dev/null; then
 echo -e "${green}Bowtie2 is installed${reset}"
@@ -416,8 +416,8 @@ cd trimmomatic_out &&
 trimmomatic_output_path=$(pwd) &&
 # Change to current directory
 cd "$current_dir" || exit
-# Change path to bowtie2.out
-cd bowtie2.out || exit
+# Change path to bowtie2_out
+cd bowtie2_out || exit
 bowtie2 -x  reference_index -1 "$trimmomatic_output_path/output_1P.fq" -2 "$trimmomatic_output_path/output_2P.fq" -S out.sam &&
 bowtie2_pid=$!
 wait $bowtie2_pid
