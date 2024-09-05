@@ -536,10 +536,10 @@ seqtk seq -A "$trimmed_read/output_2P.fq" > output_2P.fa &&
 seqtk_pid=$!
 wait $seqtk_pid
 #######################################################
-read -rp "please provide pad_reads_1.py path": pad
+read -rp "please provide absolute pad_reads_1.py path": pad
 read -rp "please provide your raw read length input for parameter: " Pad_read
-python "$pad"/pad_reads_1.py  output_1P.fa padded_out1.fa "$Pad_read"
-python "$pad"/pad_reads_1.py  output_2P.fa padded_out2.fa "$Pad_read"
+python "$pad"  output_1P.fa padded_out1.fa "$Pad_read"
+python "$pad"  output_2P.fa padded_out2.fa "$Pad_read"
 #######################################################
 echo -e "${yellow} Please provide required input parameters for AlignGraph${reset}"
 read -rp "Please provide your input for parameter --distanceLow : "  distancelow
