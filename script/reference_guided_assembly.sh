@@ -63,18 +63,18 @@ fi || exit
 echo -e "${green} fastqc run sucessfully..."
 #############################################################
 # use multiqc to compile results
-mkdir multiqc.out && #create a directory named multiqc.out
-# navigate into the directory named multiqc.out
+mkdir multiqc_out && #create a directory named multiqc_out
+# navigate into the directory named multiqc_out
 if command -v multiqc &>/dev/null; then # check for multiqc programme
 echo -e "${green} multiqc programme is installed...${reset}" # if found run multiqc here
 echo -e "${green} executing multiqc...${reset}"
-multiqc  "$current_dir/fastqc_out" -o "$current_dir/multiqc.out" || exit 1
+multiqc  "$current_dir/fastqc_out" -o "$current_dir/multiqc_out" || exit 1
 else # if not found ask for path and run multiqc here
 echo -e "${red} multiqc programme is not found please check this programme is eighter installed or present in your path...${reset}"
 echo -e "${yellow} please provide absolute path to the multiqc executable....${reset}"
 read -rp "Pleae provide absolute path to multiqc executable here :" multiqc
 echo -e "${green} executing multiqc...${reset}"
-"$multiqc" -o "$current_dir/fastqc_out" ../multiqc.out || exit 1
+"$multiqc" -o "$current_dir/fastqc_out" ../multiqc_out || exit 1
 cd "$current_dir" &&
 # Wait for command to run using wait command
 multiqc_pid=$!
