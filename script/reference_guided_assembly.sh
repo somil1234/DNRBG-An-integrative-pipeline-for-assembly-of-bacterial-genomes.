@@ -246,7 +246,7 @@ plentyofbugs --assembler "$assembler" \
              -f "${trimmomatic_output_path}/output_1P.fq" \
              -r "${trimmomatic_output_path}/output_2P.fq" \
              -g "$reference_genome" \
-             -o plentyofbugs.out
+             -o plentyofbugs_out
 ######################################################################
 elif  ! command -v plentyofbugs &>/dev/null && ! command -v spades && ! command -v skesa && command -v seqtk && command -v unicycler && command -v seqtk && command -v mash; then
 ######################################################################
@@ -259,7 +259,7 @@ read -rp "Please provide your assembler path here : " assembler
                 -f "${trimmomatic_output_path}/output_1P.fq" \
                 -r "${trimmomatic_output_path}/output_2P.fq" \
                 -g "$reference_genome" \
-                -o plentyofbugs.out
+                -o plentyofbugs_out
 fi || exit
 #######make function###########################
 function activate_conda() {
@@ -303,7 +303,7 @@ plentyofbugs --assembler "$assembler" \
              -f "${trimmomatic_output_path}/output_1P.fq" \
              -r "${trimmomatic_output_path}/output_2P.fq" \
              -g "$reference_genome" \
-             -o plentyofbugs.out
+             -o plentyofbugs_out
 #conda deactivate
 conda deactivate
 else
@@ -349,7 +349,7 @@ plentyofbugs --assembler "$assembler" \
              -f "${trimmomatic_output_path}/output_1P.fq" \
              -r "${trimmomatic_output_path}/output_2P.fq" \
              -g "$reference_genome" \
-            -o plentyofbugs.out &&  #Selection of best genome based upon Mash Value
+            -o plentyofbugs_out &&  #Selection of best genome based upon Mash Value
 conda deactivate
 else
 echo -e "${green}All required programs are already installed. Skipping installation."
@@ -362,7 +362,7 @@ plentyofbugs --assembler "$assembler" \
              -f "${trimmomatic_output_path}/output_1P.fq" \
              -r "${trimmomatic_output_path}/output_2P.fq" \
              -g "$reference_genome" \
-             -o plentyofbugs.out &&  #Selection of best genome based upon Mash Value
+             -o plentyofbugs_out &&  #Selection of best genome based upon Mash Value
 conda deactivate
 else
 echo -e "${red} ERROR: Please check all the tools are properly installed to run the program."
@@ -392,7 +392,7 @@ fi
 # Change to current directory
 cd "$current_dir" || exit
 # Taking path to reference genome
-cd plentyofbugs.out &&
+cd plentyofbugs_out &&
 reference_path=$(cat best_reference | awk '{print $1}') &&
 # Change path to current directory
 cd "$current_dir" || exit
@@ -517,10 +517,10 @@ assemblypath=$(pwd)
 cd "$current_dir" || exit
 ##################################################################################
 # Reference Based Assembly
-cd plentyofbugs.out || exit
+cd plentyofbugs_out || exit
 reference_genome=$(cat best_reference | awk '{print $1}')
 cd "$current_dir" || exit
-cd "$current_dir"/plentyofbugs.out/assembly/ || exit
+cd "$current_dir"/plentyofbugs_out/assembly/ || exit
 contigpath=$(pwd)
 cd "$current_dir" || exit
 cd trimmomatic_out &&
