@@ -136,8 +136,8 @@ cd "$current_dir" || exit 1
 # Checking if flash is installed
 # Using if else statement to check and run command
 # Make directory for flash output
-mkdir flash.out && #make flash directory
-cd flash.out &&    #navigate to flash directory
+mkdir flash_out && #make flash directory
+cd flash_out &&    #navigate to flash directory
 if command -v flash &>/dev/null; then
 echo -e "${green}flash is installed...${reset}"
 echo -e "${green}executing flash...${reset}"
