@@ -52,7 +52,7 @@ Available at https://busco.ezlab.org/
 
 **USAGE** 
 
-	./reference_guided_assembly.sh fastq_1 fastq_2 
+	./dnrgb.sh read1.fastq read2.fastq 
  
  where fastq_1 and fastq_2 are raw sequences, paired-end read one and two, respectively. 
 
@@ -73,5 +73,14 @@ Available at https://busco.ezlab.org/
 
   We have discussed the parameters in detail in our methodology section. However, for convenience, users may consider default but one should keep in mind 
   that the parameters may change according to user requirements, therefore in our scripts we do not provide the flag "--default". Users have to provide parameters interactively.
+
+  **Docker**
+  To install docker you can see `https://docs.docker.com/engine/install/ubuntu/`.
+  To use docker please use pull command `docker pull somil131/dnrgb_genome_assembly:latest`.
+
+  **Docker Command**
+  please make sure that your reference genome directory is named as `reference_genome`.
+  You can use the command as mentioned below:-
+  `docker run -it -v $(pwd):/data -v /Path/to/reference_genome:/data/reference_genome somil131/dnrgb_genome_assembly:latest /data/path/to/Your_files_1.fastq /data/path/to/Your_files_2.fastq`
 
   
