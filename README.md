@@ -2,18 +2,16 @@
 
 This pipeline is used for de-novo reference-guided assembly, which operates in three phases.
 
-Pre-processing and Contig Generation: The process begins with raw reads in FASTQ format. We first assess the quality of these reads, removing any low-quality sequences and Illumina adapters. The remaining short reads are assembled into contigs.
+1) **Pre-processing and Contig Generation:** The process begins with raw reads in FASTQ format. We first assess the quality of these reads, removing any low-quality sequences and Illumina adapters. The remaining short reads are assembled into contigs.
 
-Selection of best reference: The best reference genome is identified, and the percentage alignment calculation is performed.
+2) **Selection of best reference:** The best reference genome is identified, and the percentage alignment calculation is performed.
 
-Reference-based scaffolding:  Reference-based scaffolding is conducted.
-
+3) **Reference-based scaffolding:**  Reference-based scaffolding is conducted.
 
 
 **Installation**
 
 This pipeline is available as a LINUX executable.**
-
 
 **Dependencies**
 
@@ -55,11 +53,6 @@ Available at https://busco.ezlab.org/
 	./dnrgb.sh read1.fastq read2.fastq 
  
  where fastq_1 and fastq_2 are raw sequences, paired-end read one and two, respectively. 
-
-  **PARAMETERS**
-
-  We have discussed the parameters in detail in our methodology section. However, for convenience, users may consider default but one should keep in mind 
-  that the parameters may change according to user requirements, therefore in our scripts we do not provide the flag "--default". Users have to provide parameters interactively.
 
   **Docker**
   To install docker you can see https://docs.docker.com/engine/install/ubuntu/.
