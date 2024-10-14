@@ -529,6 +529,7 @@ cd "$current_dir" || exit
 # make directory for reference based assembly
 mkdir reference_based_assembly &&
 cd reference_based_assembly || exit
+reference_based_assembly=$(pwd)
 if command -v seqtk &>/dev/null && command -v AlignGraph &>/dev/null; then
 echo -e "${green}Running seqtk to convert fastq files to fasta files${reset}"
 seqtk seq -A "$trimmed_read/output_1P.fq" > output_1P.fa &&
@@ -551,6 +552,27 @@ echo "${red}please install AlignGraph or seqtk if already installed please make 
 fi
 cd "$current_dir" || exit
 ###################################################
+#use quast
+#make quast output dir
+mkdir quast2_out &&
+cd quast2_out &&
+# Check if quast is installed
+if command -v quast &>/dev/null; then
+echo -e "${green}quast is installed...${reset}"
+echo -e "${green}Running quast...${reset}"
+quast -o quast_output "$reference_based_assembly/sample_extendedcontig.fasta" || exit 1
+else # take absolute path to quast
+echo -e "${yellow}Please provide absolute path to quast.py and make sure python is installed...${reset}"
+read -rp "Please provide absolute path to quast here : " quast
+echo -e "${green}Running quast...${reset}"
+python "$quast" -o quast_output "$reference_based_assembly/sample_extendedcontig.fasta" || exit 1
+fi || exit
+# Wait for quast command to complete
+quast_pid2=$!
+wait $quast_pid2
+cd "$current_dir" || exit
+###################################################
+#####################################################
 # Chande path to reference based assembly
 cd reference_based_assembly || exit
 reference_based_assembly_path=$(pwd) || exit
