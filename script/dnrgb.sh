@@ -470,51 +470,9 @@ fi || exit
 ####################################################################################
 # Store the original directory
 cd "$current_dir" || exit 
-#make directory for denovo assembly
-mkdir denovo_assembly || exit
-# Store the original directory
-cd "$current_dir" || exit 
-# Denovo Assembly
 cd trimmomatic_out || exit
 paired_read=$(pwd) || exit
 cd "$current_dir"  || exit
-######################################################################################
-# move to de novo assembly directory and capture path
-cd denovo_assembly &&
-denovo_assembly_path=$(pwd) &&
-######################################################################################
-if command -v flash &>/dev/null; then
-# ask for input parameters
-echo -e "${yellow} Please provide max-overlap input...${reset}"
-read -rp "Please provide your max-overlap input (example 150) here : " max_overlap
-echo -e "${green} running flash...${reset}"
-flash --max-overlap "$max_overlap" "$paired_read/output_1P.fq" "$paired_read/output_2P.fq" > output -d "$PWD"
-else
-ask for flash path
-echo -e "${yellow} Please provide absolute path to flash...${reset}"
-read -rp "please provide your flash path here : " flash
-read -rp "Please provide your max-overlap input (example 150) here : " max_overlap
-echo -e "${green} running flash...${reset}"
-"$flash"  --max-overlap "$max_overlap" "$paired_read/output_1P.fq" "$paired_read/output_2P.fq" > output -d "$PWD"
-fi || exit
-#wait for flash process to complete
-flash_pid=$!
-wait $flash_pid
-# Run unicycler command
-if command -v unicycler &>/dev/null && command -v spades &>/dev/null; then
-unicycler -1 "$denovo_assembly_path/out.notCombined_1.fastq" -2 "$denovo_assembly_path/out.notCombined_2.fastq" -s "$denovo_assembly_path/out.extendedFrags.fastq" -o unicycler_out 
-else
-echo -e "${yellow} Please provide absolute path to unicycler...${reset}"
-read -rp "Please provide your unicycler path here : " unicycler
-echo -e "${yellow} Please provide your absolute spades path here...${reset}"
-read -rp "Please provide your spades path here : " spadespath
-echo -e "${green} executing unicycler...${reset}"
-"$unicycler" --spades_path "$spadespath" -1 "$denovo_assembly_path/out.notCombined_1.fastq" -2 "$denovo_assembly_path/out.notCombined_2.fastq" -s "$denovo_assembly_path/out.extendedFrags.fastq" -o unicycler_out 
-fi || exit
-cd unicycler_out || exit
-assemblypath=$(pwd)
-# Return to the original directory
-cd "$current_dir" || exit
 ##################################################################################
 # Reference Based Assembly
 cd plentyofbugs_out || exit
