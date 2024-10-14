@@ -470,9 +470,6 @@ fi || exit
 ####################################################################################
 # Store the original directory
 cd "$current_dir" || exit 
-cd trimmomatic_out || exit
-paired_read=$(pwd) || exit
-cd "$current_dir"  || exit
 ##################################################################################
 # Reference Based Assembly
 cd plentyofbugs_out || exit
