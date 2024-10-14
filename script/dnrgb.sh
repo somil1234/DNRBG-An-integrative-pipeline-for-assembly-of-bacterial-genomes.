@@ -429,14 +429,6 @@ cd "$current_dir" || exit
 fi || exit 
 #########################################################################
 # Check if all the command exist
-# Check for flash if not found store its path in a variable
-if command -v flash &>/dev/null; then
-echo -e "${green}flash is installed...${reset}"
-else
-#ask for flash path
-echo -e "${yellow} Please provide absolute path to flash...${reset}"
-read -rp "please provide your flash path here : " flash
-fi || exit
 #check for seqtk if not found store its path in a variable
 if command -v seqtk &>/dev/null; then
 echo -e "${green} seqtk is installed...${reset}"
@@ -450,22 +442,6 @@ echo -e "${green} AlignGraph is installed...${reset}"
 else
 # ask to AlignGraph 
 echo -e "${red} Please install AlignGraph...${reset}"
-fi || exit
-# Check for spades
-if command -v spades &>/dev/null; then
-echo -e "${green} spades is installed...${reset}"
-else
-# ask for spades path
-echo -e "${yellow} Please provide absolute path to spades...${reset}"
-read -rp "Please provide your absolute path here: " spadespath
-fi || exit
-# Check for unicycler if not
-if command -v unicycler &>/dev/null; then
-echo -e "${green} unicycler is installed...${reset}"
-else
-# ask for unicycler path
-echo -e "${yellow} Please provide absolute path to unicycler...${reset}"
-read -rp "Please provide your absolute path here: " unicycler
 fi || exit
 ####################################################################################
 # Store the original directory
