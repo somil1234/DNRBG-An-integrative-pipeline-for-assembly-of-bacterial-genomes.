@@ -81,6 +81,7 @@ Available at https://busco.ezlab.org/
   **Docker Command**
   please make sure that your reference genome directory is named as `reference_genome`.
   You can use the command as mentioned below:-
+  
   `docker run -it -v $(pwd):/data -v /Path/to/reference_genome:/data/reference_genome somil131/dnrgb_genome_assembly:latest /data/path/to/Your_files_1.fastq /data/path/to/Your_files_2.fastq`
 
   
