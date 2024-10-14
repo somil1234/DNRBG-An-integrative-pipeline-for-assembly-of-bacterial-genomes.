@@ -1,4 +1,4 @@
-# De-novo-reference-based-guided-genome-assembly-An-integrative-pipeline.
+# DNRBG: An integrative Nextflow pipeline for assembly of bacterial genomes.
 
 This pipeline is used for de-novo reference-guided assembly, which operates in three phases.
 
