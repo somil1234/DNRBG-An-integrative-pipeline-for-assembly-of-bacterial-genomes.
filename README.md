@@ -75,7 +75,7 @@ Available at https://busco.ezlab.org/
   that the parameters may change according to user requirements, therefore in our scripts we do not provide the flag "--default". Users have to provide parameters interactively.
 
   **Docker**
-  To install docker you can see `https://docs.docker.com/engine/install/ubuntu/`.
+  To install docker you can see https://docs.docker.com/engine/install/ubuntu/.
   To use docker please use pull command `docker pull somil131/dnrgb_genome_assembly:latest`.
 
   **Docker Command**
