@@ -56,20 +56,7 @@ Available at https://busco.ezlab.org/
  
  where fastq_1 and fastq_2 are raw sequences, paired-end read one and two, respectively. 
 
-
- **KEYNOTES FOR THE USER **
-
- In our pipeline, we have integrated various other tools to perform de-novo reference-based guided assembly, the requirements for each dependency may vary which can make the installation process a 
- meticulous task. We have tried our best to ensure the following dependencies are installed. Therefore there are various checkpoints in the scripts that will prompt the user if the following programs are 
- installed, if not it will ask for the full path to the required program, wherever it is needed.
- 
- Installation of "mash" "skesa" "spades" "seqtk" "unicycler" "plentyofbugs" is far easier in a conda environment. Therefore we try to provide a user with an alternative if they are not installed, the 
- scripts will try to install this for the user in a conda environment "install_env", though some may not be installed the user has to install them manually in the conda environment "install_env". If the 
- required programs are correctly installed and still programmed prompt that "the following program cannot be found" Please add the install program in your path, if all requirements are fulfilled correctly
- the program will skip the installation process and the pipeline will continue.
-
-
- **PARAMETERS**
+  **PARAMETERS**
 
   We have discussed the parameters in detail in our methodology section. However, for convenience, users may consider default but one should keep in mind 
   that the parameters may change according to user requirements, therefore in our scripts we do not provide the flag "--default". Users have to provide parameters interactively.
@@ -79,7 +66,9 @@ Available at https://busco.ezlab.org/
   To use docker please use pull command `docker pull somil131/dnrgb_genome_assembly:latest`.
 
   **Docker Command**
+  
   please make sure that your reference genome directory is named as `reference_genome`.
+
   You can use the command as mentioned below:-
   
   `docker run -it -v $(pwd):/data -v /Path/to/reference_genome:/data/reference_genome somil131/dnrgb_genome_assembly:latest /data/path/to/Your_files_1.fastq /data/path/to/Your_files_2.fastq`
