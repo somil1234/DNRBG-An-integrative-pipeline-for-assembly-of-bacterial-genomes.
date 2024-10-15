@@ -1,40 +1,43 @@
 nextflow.enable.dsl=2
 
-// Define parameters for the input files from the command line
+// Define input parameters
 params.inputFile1 = null
 params.inputFile2 = null
+params.outputDir1 = "fastqc_out"
+params.outputDir2 = "multiqc_out"
+params.outputDir3 = "trimmomatic_out"
+params.outputDir4 = "flash_out"
+params.outputDir5 = "unicycler_out"
+params.outputDir6 = "quast_out"
+params.outputDir7 = "plentyofbugs_out"
+params.outputDir8 = "bowtie2_out"
+params.outputDir9 = "reference_based_assembly"
+params.outputDir10 = "busco"
+params.scriptPath = null // To take arguments through command line
 
 process runDNRGB {
-    // Define inputs for the script
     input:
-    path inputFile2  // Expecting inputFile2 from the command line
+    path inputFile1
+    path inputFile2
 
-    // Define the expected output directories from the script
     output:
-    path "fastqc_out/*", 
-         path "multiqc_out/*", 
-         path "trimmomatic_out/*", 
-         path "flash_out/*", 
-         path "unicycler_out/*", 
-         path "quast_out/*", 
-         path "plentyofbugs_out/*", 
-         path "bowtie2_out/*", 
-         path "reference_based_assembly/*" // Adjust these to match your actual output files
+    path "${params.outputDir1}/output1.txt" // Change to your desired output
+    path "${params.outputDir2}/output2.txt" // Change to your desired output
+    path "${params.outputDir3}/output3.txt" // Change to your desired output
+    path "${params.outputDir4}/output4.txt" // Change to your desired output
+    path "${params.outputDir5}/output5.txt" // Change to your desired output
+    path "${params.outputDir6}/output6.txt" // Change to your desired output
+    path "${params.outputDir7}/output7.txt" // Change to your desired output
+    path "${params.outputDir8}/output8.txt" // Change to your desired output
+    path "${params.outputDir9}/output9.txt" // Change to your desired output
+    path "${params.outputDir10}/output10.txt" // Change to your desired output
 
-    // Execute the Bash script with both input files passed as parameters
     script:
     """
-    bash dnrgb.sh ${params.inputFile1} $inputFile2
+    bash ${params.scriptPath} "${inputFile1}" "${inputFile2}"
     """
-}
+ }
 
-// Define the workflow
 workflow {
-    // Check if the user provided both input files
-    if (params.inputFile1 == null || params.inputFile2 == null) {
-        error "Please provide both input files using the '-inputFile1' and '-inputFile2' parameters."
-    }
-
-    // Run the DNRGB process with the second input file
-    runDNRGB(params.inputFile2)
-}
+    runDNRGB(params.inputFile1, params.inputFile2)
+ }
