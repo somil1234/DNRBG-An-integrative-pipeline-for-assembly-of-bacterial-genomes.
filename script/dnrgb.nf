@@ -155,64 +155,68 @@ process quast {
     script:
     """
     mkdir -p quast_out
-    quast -o "${params.outputDir6}/quast_output" "${params.outputDir5}/assembly/assembly.fasta"
+    quast.py -o "${params.outputDir6}/quast_output" "${params.outputDir5}/assembly/assembly.fasta"
     """
 }
 
-// Define the seventh process (Plentyofbugs)
+// Define plentyofbugs
 process plentyofbugs {
-
     input:
     path quast_result
     path assembler
     path reference_genome
+    path trimmomatic_out
 
     output:
-    path "${params.outputDir7}"
+    path "${params.outputDir7}/plentyofbugs_out/*", emit: plentyofbugs_result
 
     script:
     """
-    mkdir -p plentyofbugs_out
-    plentyofbugs --assembler "$assembler" -f "${params.outputDir3}/output_1P.fq" \
-        -r "${params.outputDir3}/output_2P.fq" -g "$reference_genome" \
-        -o "${params.outputDir7}/plentyofbugs_out"
+
+    plentyofbugs --assembler "$assembler" -f "${trimmomatic_out}/output_1P.fq" -r "${trimmomatic_out}/output_2P.fq" -g "$reference_genome" -o "${params.outputDir7}/plentyofbugs_out"
     """
 }
 
-// Define the process for Bowtie2 build
+// Define process bowtie2_build
 process bowtie2_build {
 
     input:
-    path "${params.outputDir7}/best_reference"
+    path plentyofbugs_result
+    path reference_genome
 
     output:
-    path("${params.outputDir8}/reference_index*.bt2"), emit: bowtie2_indices
+    path "bowtie2_out"
 
     script:
     """
-    mkdir -p ${params.outputDir8}
-
-    best_genome=\$(awk '{print \$1}' "${best_reference}")
-
-    bowtie2-build -f "\${best_genome}" "${params.outputDir8}/reference_index"
+    mkdir -p "bowtie2_out"
+    best_genome=\$(awk '{gsub(/reference_genome\\//, ""); print \$1}' "best_reference")
+    genome_file="${reference_genome}/\${best_genome}"
+    bowtie2-build -f "\$genome_file" "${params.outputDir8}/reference_index"
     """
 }
 
 // Define the process for Bowtie2 alignment
 process bowtie2 {
 
+    publishDir "{params.outputDir8}/bowtie2_out", mode: 'copy'
+
     input:
-    path "${params.outputDir8}/reference_index"
-    path "${params.outputDir3}"
+    path bowtie2_out
+    path trimmomatic_out
 
     output:
-    path "${params.outputDir8}"
+    path "${params.outputDir8}/out.sam"
 
     script:
     """
-    bowtie2 -x "${params.outputDir8}/reference_index" \
-        -1 "${params.outputDir3}/output_1P.fq" -2 "${params.outputDir3}/output_2P.fq" \
-        -S "${params.outputDir8}/out.sam"
+    baseName=\$(basename \$(find ${bowtie2_out} -name '*.bt2' | head -n 1) | sed 's/\\.[0-9]*\\.bt2\$//')
+    indexPath="${bowtie2_out}/\${baseName}"
+    echo "Index path is: \${indexPath}"
+    bowtie2 -x \${indexPath} \
+            -1 ${trimmomatic_out}/output_1P.fq \
+            -2 ${trimmomatic_out}/output_2P.fq \
+            -S ${params.outputDir8}/out.sam
     """
 }
 
@@ -291,7 +295,7 @@ process quast2 {
     script:
     """
     mkdir -p ${params.outputDir9}/quast_output
-    quast -o "${params.outputDir9}/quast_output" "$extended_contigs"
+    quast.py -o "${params.outputDir9}/quast_output" "$extended_contigs"
     """
 }
 
@@ -332,13 +336,13 @@ process busco {
       def quast_result = quast(unicycler_results)
 
    // Run plentyofbugs
-      def plentyofbugs_results = plentyofbugs(quast_result, params.assembler, params.reference_genome)
+      def plentyofbugs_results = plentyofbugs(quast_result, params.assembler, params.reference_genome, trimmomatic_results)
 
    // Run bowtie2_build
-      def bowtie2_build_results = bowtie2_build(plentyofbugs_results)
+      def bowtie2_build_results = bowtie2_build(plentyofbugs_results, params.reference_genome)
 
    // Run bowtie2
-      def bowtie2_align_result = bowtie2(bowtie2_build_results, params.outputDir3)
+      def bowtie2_align_result = bowtie2(bowtie2_build_results, trimmomatic_results)
 
    // Run seqtk
       def seqtk_results = seqtk(bowtie2_align_result, params.outputDir3)
