@@ -185,7 +185,7 @@ process bowtie2_build {
     path reference_genome
 
     output:
-    path "bowtie2_out"
+    path "bowtie2_out", emit: bowtie2_index
 
     script:
     """
@@ -198,9 +198,6 @@ process bowtie2_build {
 
 // Define the process for Bowtie2 alignment
 process bowtie2 {
-
-    publishDir "{params.outputDir8}/bowtie2_out", mode: 'copy'
-
     input:
     path bowtie2_out
     path trimmomatic_out
@@ -210,32 +207,31 @@ process bowtie2 {
 
     script:
     """
-    baseName=\$(basename \$(find ${bowtie2_out} -name '*.bt2' | head -n 1) | sed 's/\\.[0-9]*\\.bt2\$//')
-    indexPath="${bowtie2_out}/\${baseName}"
-    echo "Index path is: \${indexPath}"
+    indexPath=\$(find \$(realpath "\$(pwd)") -type d -name "bowtie2_out" -exec find {} -name '*.rev.1.bt2' \\; | sed 's/\\.rev.1.bt2\$//')
     bowtie2 -x \${indexPath} \
             -1 ${trimmomatic_out}/output_1P.fq \
             -2 ${trimmomatic_out}/output_2P.fq \
-            -S ${params.outputDir8}/out.sam
+            -S out.sam
     """
 }
+
 
 // Define the process for seqtk
 process seqtk {
 
     input:
-    path "${params.outputDir3}/output_1P.fq" // Input for forward reads
-    path "${params.outputDir3}/output_2P.fq" // Input for reverse reads
+    path trimmomatic_out // Input for forward reads
+    path bowtie2_out
 
     output:
-    path "output_1P.fa", emit: forward_fasta // Forward reads converted to FASTA
-    path "output_2P.fa", emit: reverse_fasta // Reverse reads converted to FASTA
+    path "${params.outputDir9}/output_1P.fa", emit: forward_fasta // Forward reads converted to FASTA
+    path "${params.outputDir9}/output_2P.fa", emit: reverse_fasta // Reverse reads converted to FASTA
 
     script:
     """
-    mkdir -p ${params.outputDir8}
-    seqtk seq -A "${params.outputDir3}/output_1P.fq" > "${params.outputDir9}/output_1P.fa"
-    seqtk seq -A "${params.outputDir3}/output_1P.fq" > "${params.outputDir9}/output_2P.fa"
+    mkdir -p "reference_based_assembly"
+    seqtk seq -A  "${trimmomatic_out}/output_1P.fq" > "${params.outputDir9}/output_1P.fa"
+    seqtk seq -A  "${trimmomatic_out}/output_2P.fq" > "${params.outputDir9}/output_2P.fa"
     """
 }
 
@@ -254,9 +250,7 @@ process pad_read {
 
     script:
     """
-    python "$pad_read_path"  "${params.outputDir9}/output_1P.fa" "${params.outputDir9}/padded_out1.fa" "$pad_read_value"
-    python "$pad_read_path"  "${params.outputDir9}/output_2P.fa" "${params.outputDir9}/padded_out2.fa" "$pad_read_value"
-    """
+    python "$pad_read_path"  "${params.outputDir9}/output_1P.fa" "${params.outputDir9}/padded_out1.fa" "$pad_read_value"    python "$pad_read_path"  "${params.outputDir9}/output_2P.fa" "${params.outputDir9}/padded_out2.fa" "$pad_read_value"    """
 }
 
 process AlignGraph {
@@ -345,7 +339,7 @@ process busco {
       def bowtie2_align_result = bowtie2(bowtie2_build_results, trimmomatic_results)
 
    // Run seqtk
-      def seqtk_results = seqtk(bowtie2_align_result, params.outputDir3)
+      def seqtk_results = seqtk(bowtie2_align_result, trimmomatic_results)
 
    // Run pad_read
       def (padded_out1, padded_out2) = pad_read(seqtk_results, params.pad_read_path, params.pad_read_value)
