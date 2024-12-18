@@ -179,27 +179,26 @@ process plentyofbugs {
 
 // Define process bowtie2_build
 process bowtie2_build {
-
     input:
     path plentyofbugs_result
     path reference_genome
 
     output:
-    path "bowtie2_out", emit: bowtie2_index
+    path "${params.outputDir8}/bowtie2_index/*", emit: bowtie2_index
 
     script:
     """
-    mkdir -p "bowtie2_out"
+    mkdir -p "${params.outputDir8}/bowtie2_index"
     best_genome=\$(awk '{gsub(/reference_genome\\//, ""); print \$1}' "best_reference")
     genome_file="${reference_genome}/\${best_genome}"
-    bowtie2-build -f "\$genome_file" "${params.outputDir8}/reference_index"
+    bowtie2-build -f "\$genome_file" "${params.outputDir8}/bowtie2_index/reference_index"
     """
 }
 
-// Define the process for Bowtie2 alignment
+// Define process bowtie2
 process bowtie2 {
     input:
-    path bowtie2_out
+    path bowtie2_index
     path trimmomatic_out
 
     output:
@@ -207,14 +206,15 @@ process bowtie2 {
 
     script:
     """
-    indexPath=\$(find \$(realpath "\$(pwd)") -type d -name "bowtie2_out" -exec find {} -name '*.rev.1.bt2' \\; | sed 's/\\.rev.1.bt2\$//')
+    mkdir -p bowtie2_out
+    indexPath=\$(find -L ${bowtie2_index} -type f -name '*.rev.1.bt2' | sed 's/\\.rev.1.bt2\$//')
+    echo "Using index path: \${indexPath}"
     bowtie2 -x \${indexPath} \
             -1 ${trimmomatic_out}/output_1P.fq \
             -2 ${trimmomatic_out}/output_2P.fq \
-            -S out.sam
+            -S "bowtie2_out/out.sam"
     """
 }
-
 
 // Define the process for seqtk
 process seqtk {
@@ -250,7 +250,9 @@ process pad_read {
 
     script:
     """
-    python "$pad_read_path"  "${params.outputDir9}/output_1P.fa" "${params.outputDir9}/padded_out1.fa" "$pad_read_value"    python "$pad_read_path"  "${params.outputDir9}/output_2P.fa" "${params.outputDir9}/padded_out2.fa" "$pad_read_value"    """
+    python "$pad_read_path"  "${params.outputDir9}/output_1P.fa" "${params.outputDir9}/padded_out1.fa" "$pad_read_value"
+    python "$pad_read_path"  "${params.outputDir9}/output_2P.fa" "${params.outputDir9}/padded_out2.fa" "$pad_read_value"
+    """
 }
 
 process AlignGraph {
@@ -332,11 +334,11 @@ process busco {
    // Run plentyofbugs
       def plentyofbugs_results = plentyofbugs(quast_result, params.assembler, params.reference_genome, trimmomatic_results)
 
-   // Run bowtie2_build
+   // Run bowtie2_build process
       def bowtie2_build_results = bowtie2_build(plentyofbugs_results, params.reference_genome)
 
-   // Run bowtie2
-      def bowtie2_align_result = bowtie2(bowtie2_build_results, trimmomatic_results)
+   // Run bowtie2 process using the emitted bowtie2_index
+      def bowtie2_align_result = bowtie2(bowtie2_build_results.bowtie2_index, trimmomatic_results)
 
    // Run seqtk
       def seqtk_results = seqtk(bowtie2_align_result, trimmomatic_results)
