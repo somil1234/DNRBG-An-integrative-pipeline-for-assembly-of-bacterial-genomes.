@@ -24,7 +24,6 @@ params.reference_genome = 'path/to/your/reference/genome/dir'
 
 // Define input parameter path for pad reads
 params.pad_read_path = 'path/to/your/pad_reads.py'
-params.pad_read_value = 150
 
 // Define input parameters for AlignGraph
 params.distancelow = 100
@@ -220,8 +219,8 @@ process bowtie2 {
 process seqtk {
 
     input:
-    path trimmomatic_out // Input for forward reads
     path bowtie2_out
+    path trimmomatic_out
 
     output:
     path "${params.outputDir9}/output_1P.fa", emit: forward_fasta // Forward reads converted to FASTA
@@ -229,7 +228,7 @@ process seqtk {
 
     script:
     """
-    mkdir -p "reference_based_assembly"
+    mkdir -p "${params.outputDir9}"
     seqtk seq -A  "${trimmomatic_out}/output_1P.fq" > "${params.outputDir9}/output_1P.fa"
     seqtk seq -A  "${trimmomatic_out}/output_2P.fq" > "${params.outputDir9}/output_2P.fa"
     """
@@ -241,17 +240,16 @@ process pad_read {
     input:
     path seqtk_results
     path pad_read_path
-    val pad_read_value
-    path "${params.outputDir9}"
+    path reference_based_assembly
 
     output:
-    path "${params.outputDir9}/padded_out1.fa", emit: padded_out1
-    path "${params.outputDir9}/padded_out2.fa", emit: padded_out2
+    path "${reference_based_assembly}/padded_out1.fa", emit: padded_out1
+    path "${reference_based_assembly}/padded_out2.fa", emit: padded_out2
 
     script:
     """
-    python "$pad_read_path"  "${params.outputDir9}/output_1P.fa" "${params.outputDir9}/padded_out1.fa" "$pad_read_value"
-    python "$pad_read_path"  "${params.outputDir9}/output_2P.fa" "${params.outputDir9}/padded_out2.fa" "$pad_read_value"
+    python "${params.pad_read_path}"  "$forward_fasta" "${params.outputDir9}/padded_out1.fa" 150
+    python "${params.pad_read_path}"  "$reverse_fasta" "${params.outputDir9}/padded_out2.fa" 150
     """
 }
 
@@ -344,7 +342,7 @@ process busco {
       def seqtk_results = seqtk(bowtie2_align_result, trimmomatic_results)
 
    // Run pad_read
-      def (padded_out1, padded_out2) = pad_read(seqtk_results, params.pad_read_path, params.pad_read_value)
+      def (padded_out1, padded_out2) = pad_read(seqtk_results, params.pad_read_path)
 
    // Run AlignGraph
       def AlignGraph_results = AlignGraph(params.distancelow, params.distancehigh, padded_out1, padded_out2)
