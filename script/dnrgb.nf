@@ -223,8 +223,8 @@ process seqtk {
     path trimmomatic_out
 
     output:
-    path "${params.outputDir9}/output_1P.fa", emit: forward_fasta // Forward reads converted to FASTA
-    path "${params.outputDir9}/output_2P.fa", emit: reverse_fasta // Reverse reads converted to FASTA
+    path "${params.outputDir9}/output_1P.fa"
+    path "${params.outputDir9}/output_2P.fa"
 
     script:
     """
@@ -238,18 +238,19 @@ process seqtk {
 process pad_read {
 
     input:
-    path seqtk_results
     path pad_read_path
-    path reference_based_assembly
+    path "${params.outputDir9}"
+
 
     output:
-    path "${reference_based_assembly}/padded_out1.fa", emit: padded_out1
-    path "${reference_based_assembly}/padded_out2.fa", emit: padded_out2
+    path "${params.outputDir9}/padded_out1.fa"
+    path "${params.outputDir9}/padded_out2.fa"
 
     script:
     """
-    python "${params.pad_read_path}"  "$forward_fasta" "${params.outputDir9}/padded_out1.fa" 150
-    python "${params.pad_read_path}"  "$reverse_fasta" "${params.outputDir9}/padded_out2.fa" 150
+    mkdir -p "${params.outputDir9}"
+    python "${params.pad_read_path}"  "${params.outputDir9}/output_1P.fa" "${params.outputDir9}/padded_out1.fa" 150
+    python "${params.pad_read_path}"  "${params.outputDir9}/output_2P.fa" "${params.outputDir9}/padded_out2.fa" 150
     """
 }
 
@@ -258,8 +259,6 @@ process AlignGraph {
     input:
     val distancelow
     val distancehigh
-    path padded_out1
-    path padded_out2
 
     output:
     path "${params.outputDir9}/sample_extendedcontig.fasta", emit: extended_contigs
@@ -268,8 +267,8 @@ process AlignGraph {
     script:
     """
     best_genome=\$(awk '{print \$1}' "${params.outputDir7}/best_reference")
-    AlignGraph --read1 "$padded_out1" \
-        --read2 "$padded_out2" \
+    AlignGraph --read1 "${params.outputDir9}/padded_out1.fa" \
+        --read2 "${params.outputDir9}/padded_out1.fa" \
         --contig "${params.outputDir7}/plentyofbugs_out/assembly/contigs.fasta" \
         --genome "\$best_genome" --distanceLow "$distancelow" --distanceHigh "$distancehigh" \
         --extendedContig "${params.outputDir9}/sample_extendedcontig.fasta" \
@@ -341,11 +340,11 @@ process busco {
    // Run seqtk
       def seqtk_results = seqtk(bowtie2_align_result, trimmomatic_results)
 
-   // Run pad_read
-      def (padded_out1, padded_out2) = pad_read(seqtk_results, params.pad_read_path)
+   // Run the pad_read process
+      def pad_read_results = pad_read(params.pad_read_path, params.outputDir9)
 
    // Run AlignGraph
-      def AlignGraph_results = AlignGraph(params.distancelow, params.distancehigh, padded_out1, padded_out2)
+      def AlignGraph_results = AlignGraph(params.distancelow, params.distancehigh)
 
    // Run quast2 for AlignGraph
       def quast2_results = quast2(AlignGraph_results.extended_contigs)
