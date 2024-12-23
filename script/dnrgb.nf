@@ -217,14 +217,13 @@ process bowtie2 {
 
 // Define the process for seqtk
 process seqtk {
-
     input:
     path bowtie2_out
     path trimmomatic_out
 
     output:
-    path "${params.outputDir9}/output_1P.fa"
-    path "${params.outputDir9}/output_2P.fa"
+    path "${params.outputDir9}/output_1P.fa", emit: forward_read
+    path "${params.outputDir9}/output_2P.fa", emit: reverse_read
 
     script:
     """
@@ -238,25 +237,30 @@ process seqtk {
 process pad_read {
 
     input:
+    path forward_read
+    path reverse_read
     path pad_read_path
     path "${params.outputDir9}"
 
 
     output:
-    path "${params.outputDir9}/padded_out1.fa"
-    path "${params.outputDir9}/padded_out2.fa"
+    path "${params.outputDir9}/padded_out1.fa", emit: padded_file1
+    path "${params.outputDir9}/padded_out2.fa", emit: padded_file2
 
     script:
     """
     mkdir -p "${params.outputDir9}"
-    python "${params.pad_read_path}"  "${params.outputDir9}/output_1P.fa" "${params.outputDir9}/padded_out1.fa" 150
-    python "${params.pad_read_path}"  "${params.outputDir9}/output_2P.fa" "${params.outputDir9}/padded_out2.fa" 150
+    python "${params.pad_read_path}"  "${params.outputDir9}/forward_read" "${params.outputDir9}/padded_file1" 150
+    python "${params.pad_read_path}"  "${params.outputDir9}/reverse_read" "${params.outputDir9}/padded_file2" 150
     """
 }
 
+//Define process for AlignGraph
 process AlignGraph {
 
     input:
+    path padded_file1
+    path padded_file2
     val distancelow
     val distancehigh
 
@@ -341,10 +345,10 @@ process busco {
       def seqtk_results = seqtk(bowtie2_align_result, trimmomatic_results)
 
    // Run the pad_read process
-      def pad_read_results = pad_read(params.pad_read_path, params.outputDir9)
+      def pad_read_results = pad_read(params.pad_read_path, params.outputDir9, seqtk_results.forward_read, seqtk_results.reverse_read)
 
    // Run AlignGraph
-      def AlignGraph_results = AlignGraph(params.distancelow, params.distancehigh)
+      def AlignGraph_results = AlignGraph(params.distancelow, params.distancehigh, pad_read_results.padded_file1, pad_read_results.padded_file2)
 
    // Run quast2 for AlignGraph
       def quast2_results = quast2(AlignGraph_results.extended_contigs)
