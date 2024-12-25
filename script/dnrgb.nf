@@ -222,8 +222,7 @@ process seqtk {
     path trimmomatic_out
 
     output:
-    path "${params.outputDir9}/output_1P.fa", emit: forward_read
-    path "${params.outputDir9}/output_2P.fa", emit: reverse_read
+    path "${params.outputDir9}/*", emit: seqtk_out
 
     script:
     """
@@ -240,7 +239,7 @@ process pad_read {
     path forward_read
     path reverse_read
     path pad_read_path
-    path "${params.outputDir9}"
+    path reference_based_assembly
 
 
     output:
@@ -249,9 +248,8 @@ process pad_read {
 
     script:
     """
-    mkdir -p "${params.outputDir9}"
-    python "${params.pad_read_path}"  "${params.outputDir9}/forward_read" "${params.outputDir9}/padded_file1" 150
-    python "${params.pad_read_path}"  "${params.outputDir9}/reverse_read" "${params.outputDir9}/padded_file2" 150
+    python "${params.pad_read_path}" "$forward_read" "${reference_based_assembly}/padded_out1.fa" 150
+    python "${params.pad_read_path}" "$reverse_read" "${reference_based_assembly}/padded_out2.fa" 150
     """
 }
 
@@ -344,8 +342,12 @@ process busco {
    // Run seqtk
       def seqtk_results = seqtk(bowtie2_align_result, trimmomatic_results)
 
+   // Extract specific files from seqtk results
+      def forward_read = seqtk_results.seqtk_out.filter { it.name == "output_1P.fa" }
+      def reverse_read = seqtk_results.seqtk_out.filter { it.name == "output_2P.fa" }
+
    // Run the pad_read process
-      def pad_read_results = pad_read(params.pad_read_path, params.outputDir9, seqtk_results.forward_read, seqtk_results.reverse_read)
+      def pad_read_results = pad_read(forward_read, reverse_read, params.pad_read_path, params.outputDir9)
 
    // Run AlignGraph
       def AlignGraph_results = AlignGraph(params.distancelow, params.distancehigh, pad_read_results.padded_file1, pad_read_results.padded_file2)
