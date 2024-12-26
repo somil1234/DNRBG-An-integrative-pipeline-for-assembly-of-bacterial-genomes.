@@ -227,19 +227,18 @@ process seqtk {
     script:
     """
     mkdir -p "${params.outputDir9}"
-    seqtk seq -A  "${trimmomatic_out}/output_1P.fq" > "${params.outputDir9}/output_1P.fa"
-    seqtk seq -A  "${trimmomatic_out}/output_2P.fq" > "${params.outputDir9}/output_2P.fa"
+    seqtk seq -A  "${trimmomatic_out}/output_1P.fq" > "${params.outputDir9}/paired_forward_1"
+    seqtk seq -A  "${trimmomatic_out}/output_2P.fq" > "${params.outputDir9}/paired_forward_2"
     """
 }
 
-// Define the process for padding reads
+//Define process for pad read
 process pad_read {
-
     input:
-    path forward_read
-    path reverse_read
+    path seqtk_results
     path pad_read_path
-    path reference_based_assembly
+    path forward_read, stageAs: "paired_forward_1"
+    path reverse_read, stageAs: "paired_reverse_2"
 
 
     output:
@@ -248,8 +247,9 @@ process pad_read {
 
     script:
     """
-    python "${params.pad_read_path}" "$forward_read" "${reference_based_assembly}/padded_out1.fa" 150
-    python "${params.pad_read_path}" "$reverse_read" "${reference_based_assembly}/padded_out2.fa" 150
+    mkdir -p "${params.outputDir9}"
+    python "${params.pad_read_path}" "${params.outputDir9}/$forward_read" "${params.outputDir9}/padded_out1.fa" 150
+    python "${params.pad_read_path}" "${params.outputDir9}/$reverse_read" "${params.outputDir9}/padded_out2.fa" 150
     """
 }
 
@@ -343,11 +343,11 @@ process busco {
       def seqtk_results = seqtk(bowtie2_align_result, trimmomatic_results)
 
    // Extract specific files from seqtk results
-      def forward_read = seqtk_results.seqtk_out.filter { it.name == "output_1P.fa" }
-      def reverse_read = seqtk_results.seqtk_out.filter { it.name == "output_2P.fa" }
+      def forward_read = file("${seqtk_results.seqtk_out}/output_1P.fa")
+      def reverse_read = file("${seqtk_results.seqtk_out}/output_2P.fa")
 
    // Run the pad_read process
-      def pad_read_results = pad_read(forward_read, reverse_read, params.pad_read_path, params.outputDir9)
+      def pad_read_results = pad_read(seqtk_results, params.pad_read_path, forward_read, reverse_read)
 
    // Run AlignGraph
       def AlignGraph_results = AlignGraph(params.distancelow, params.distancehigh, pad_read_results.padded_file1, pad_read_results.padded_file2)
