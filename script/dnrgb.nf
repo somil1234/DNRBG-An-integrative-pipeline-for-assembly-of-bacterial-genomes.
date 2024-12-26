@@ -235,11 +235,8 @@ process seqtk {
 //Define process for pad read
 process pad_read {
     input:
-    path seqtk_results
+    tuple path(forward_read), path(reverse_read)
     path pad_read_path
-    path forward_read, stageAs: "paired_forward_1"
-    path reverse_read, stageAs: "paired_reverse_2"
-
 
     output:
     path "${params.outputDir9}/padded_out1.fa", emit: padded_file1
@@ -248,8 +245,8 @@ process pad_read {
     script:
     """
     mkdir -p "${params.outputDir9}"
-    python "${params.pad_read_path}" "${params.outputDir9}/$forward_read" "${params.outputDir9}/padded_out1.fa" 150
-    python "${params.pad_read_path}" "${params.outputDir9}/$reverse_read" "${params.outputDir9}/padded_out2.fa" 150
+    python "${params.pad_read_path}" "$forward_read" "${params.outputDir9}/padded_out1.fa" 150
+    python "${params.pad_read_path}" "$reverse_read" "${params.outputDir9}/padded_out2.fa" 150
     """
 }
 
@@ -343,11 +340,11 @@ process busco {
       def seqtk_results = seqtk(bowtie2_align_result, trimmomatic_results)
 
    // Extract specific files from seqtk results
-      def forward_read = file("${seqtk_results.seqtk_out}/output_1P.fa")
-      def reverse_read = file("${seqtk_results.seqtk_out}/output_2P.fa")
+      def forward_read = file("${seqtk_results.seqtk_out}/paired_forward_1")
+      def reverse_read = file("${seqtk_results.seqtk_out}/paired_forward_2")
 
    // Run the pad_read process
-      def pad_read_results = pad_read(seqtk_results, params.pad_read_path, forward_read, reverse_read)
+       def pad_read_results =  pad_read(seqtk_results, params.pad_read_path)
 
    // Run AlignGraph
       def AlignGraph_results = AlignGraph(params.distancelow, params.distancehigh, pad_read_results.padded_file1, pad_read_results.padded_file2)
