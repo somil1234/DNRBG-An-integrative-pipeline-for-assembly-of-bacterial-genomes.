@@ -29,9 +29,6 @@ params.pad_read_path = 'path/to/your/pad_reads.py'
 params.distancelow = 100
 params.distancehigh = 1000
 
-// Define input parameter for BUSCO
-params.busco_lineage = 'bacteria_odb10'
-
 // Define output directories
 params.outputDir1 = "fastqc_out"
 params.outputDir2 = "multiqc_out"
@@ -168,10 +165,11 @@ process plentyofbugs {
 
     output:
     path "${params.outputDir7}/plentyofbugs_out/*", emit: plentyofbugs_result
+    path "${params.outputDir7}/plentyofbugs_out/assembly/contigs.fasta" , emit: contigs_file
 
     script:
     """
-
+    mkdir -p "${params.outputDir7}"
     plentyofbugs --assembler "$assembler" -f "${trimmomatic_out}/output_1P.fq" -r "${trimmomatic_out}/output_2P.fq" -g "$reference_genome" -o "${params.outputDir7}/plentyofbugs_out"
     """
 }
@@ -252,26 +250,26 @@ process pad_read {
 
 //Define process for AlignGraph
 process AlignGraph {
-
     input:
+    path plentyofbugs_results
+    path reference_genome
     path padded_file1
     path padded_file2
+    path contigs_file
     val distancelow
     val distancehigh
 
     output:
-    path "${params.outputDir9}/sample_extendedcontig.fasta", emit: extended_contigs
-    path "${params.outputDir9}/sample_remainingcontig.fasta", emit: remaining_contigs
+    path "reference_based_assembly/sample_extendedcontig.fasta", emit: extended_contigs
+    path "reference_based_assembly/sample_remainingcontig.fasta", emit: remaining_contigs
 
     script:
     """
-    best_genome=\$(awk '{print \$1}' "${params.outputDir7}/best_reference")
-    AlignGraph --read1 "${params.outputDir9}/padded_out1.fa" \
-        --read2 "${params.outputDir9}/padded_out1.fa" \
-        --contig "${params.outputDir7}/plentyofbugs_out/assembly/contigs.fasta" \
-        --genome "\$best_genome" --distanceLow "$distancelow" --distanceHigh "$distancehigh" \
-        --extendedContig "${params.outputDir9}/sample_extendedcontig.fasta" \
-        --remainingContig "${params.outputDir9}/sample_remainingcontig.fasta"
+    mkdir -p "reference_based_assembly"
+    echo "Contig file path: $contigs_file"
+    best_genome=\$(awk '{gsub(/reference_genome\\//, ""); print \$1}' "best_reference")
+    genome_file="${reference_genome}/\${best_genome}"
+    AlignGraph --read1 "$padded_file1" --read2 "$padded_file2" --contig "$contigs_file" --genome "\$genome_file"  --distanceLow "$distancelow"  --distanceHigh "$distancehigh"  --extendedContig "reference_based_assembly/sample_extendedcontig.fasta" --remainingContig "reference_based_assembly/sample_remainingcontig.fasta"
     """
 }
 
@@ -295,8 +293,10 @@ process quast2 {
 process busco {
 
     input:
-    path busco_lineage
+    path AlignGraph_results
+    path quast2_results
     path extended_contigs
+    path remaining_contigs
 
     output:
     path "${params.outputDir10}/busco_output"
@@ -304,11 +304,12 @@ process busco {
     script:
     """
     mkdir -p ${params.outputDir10}
-    busco -i "$extended_contigs" -o "${params.outputDir10}/busco_output" -l "$busco_lineage" --mode genome
+    busco -i "$extended_contigs" -o "${params.outputDir10}/busco_output" -l bacteria_odb10  --mode genome
     """
 }
 
  workflow {
+
     // Run fastqc  and get the output
        def fastqc_result = fastqc(params.forward_read, params.reverse_read)
 
@@ -328,7 +329,7 @@ process busco {
       def quast_result = quast(unicycler_results)
 
    // Run plentyofbugs
-      def plentyofbugs_results = plentyofbugs(quast_result, params.assembler, params.reference_genome, trimmomatic_results)
+      def (plentyofbugs_results, contigs_file) = plentyofbugs(quast_result, params.assembler, params.reference_genome, trimmomatic_results)
 
    // Run bowtie2_build process
       def bowtie2_build_results = bowtie2_build(plentyofbugs_results, params.reference_genome)
@@ -339,19 +340,18 @@ process busco {
    // Run seqtk
       def seqtk_results = seqtk(bowtie2_align_result, trimmomatic_results)
 
-   // Extract specific files from seqtk results
       def forward_read = file("${seqtk_results.seqtk_out}/paired_forward_1")
       def reverse_read = file("${seqtk_results.seqtk_out}/paired_forward_2")
 
    // Run the pad_read process
-       def pad_read_results =  pad_read(seqtk_results, params.pad_read_path)
+      def pad_read_results =  pad_read(seqtk_results, params.pad_read_path)
 
    // Run AlignGraph
-      def AlignGraph_results = AlignGraph(params.distancelow, params.distancehigh, pad_read_results.padded_file1, pad_read_results.padded_file2)
+     def AlignGraph_results = AlignGraph(plentyofbugs_results, params.reference_genome, pad_read_results.padded_file1, pad_read_results.padded_file2, contigs_file, params.distancelow, params.distancehigh)
 
-   // Run quast2 for AlignGraph
-      def quast2_results = quast2(AlignGraph_results.extended_contigs)
+  // Run quast2 for AlignGraph
+     def quast2_results = quast2(AlignGraph_results.extended_contigs)
 
-   // Run busco
-      busco(quast2_results, params.busco_lineage)
+  // Now, call busco, passing the necessary inputs
+    busco(quast2_results, AlignGraph_results.extended_contigs, AlignGraph_results.remaining_contigs)
 }
