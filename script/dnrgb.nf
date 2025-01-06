@@ -294,9 +294,8 @@ process busco {
 
     input:
     path AlignGraph_results
-    path quast2_results
     path extended_contigs
-    path remaining_contigs
+    path quast2_results
 
     output:
     path "${params.outputDir10}/busco_output"
@@ -352,6 +351,6 @@ process busco {
   // Run quast2 for AlignGraph
      def quast2_results = quast2(AlignGraph_results.extended_contigs)
 
-  // Now, call busco, passing the necessary inputs
-    busco(quast2_results, AlignGraph_results.extended_contigs, AlignGraph_results.remaining_contigs)
+  //Run busco
+    busco(AlignGraph_results, quast2_results)
 }
