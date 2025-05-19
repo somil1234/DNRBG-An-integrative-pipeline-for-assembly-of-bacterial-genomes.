@@ -42,7 +42,7 @@ Available at https://github.com/nickp60/plentyofbugs
 Available at https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml
 
 9. **AlignGraph**
-Available at https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml
+Available at https://github.com/baoe/AlignGraph
 
 10. **BUSCO**
 Available at https://busco.ezlab.org/
