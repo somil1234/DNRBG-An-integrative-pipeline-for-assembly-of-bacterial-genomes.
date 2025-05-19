@@ -66,4 +66,34 @@ Available at https://busco.ezlab.org/
   
   `docker run -it -v $(pwd):/data -v /Path/to/reference_genome:/data/reference_genome somil131/dnrgb_genome_assembly:latest /data/path/to/Your_files_1.fastq /data/path/to/Your_files_2.fastq`
 
+  **NEXTFLOW Command**
+
+  `/path/to/nextflow run /path/to/DNRBG/scripts/dnrgb.nf \
+  --forward_read Path/to/forward/read \
+  --reverse_read Path/to/reverse/read \
+  --thread 24 \
+  --phred 33 \
+  --PATH_TO_ADAPTER_CONTAM_FILE Path/to/adapters/files/TruSeq3-PE-2.fa \
+  --leading 3 \
+  --trailing 3 \
+  --slidingwindow '4:15' \
+  --minlength 36 \
+  --max_overlap 150 \
+  --assembler Path/to/skesa \
+  --reference_genome Path/to/reference/genome \
+  --pad_read_path Path/to/DNRBG/scripts/pad_reads_1.py \
+  --distancelow 100 \
+  --distancehigh 1000 \
+  --outputDir1 fastqc_out \
+  --outputDir2 multiqc_out \
+  --outputDir3 trimmomatic_out \
+  --outputDir4 flash_out \
+  --outputDir5 unicycler_out \
+  --outputDir6 quast_out \
+  --outputDir7 plentyofbugs_out \
+  --outputDir8 bowtie2_out \
+  --outputDir9 reference_based_assembly \
+  --outputDir10 busco`
+
+
   
