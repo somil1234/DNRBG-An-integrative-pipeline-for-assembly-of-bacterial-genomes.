@@ -1,87 +1,120 @@
-# DNRBG: An integrative Nextflow pipeline for assembly of bacterial genomes.
+# DNRBG: An Integrative Pipeline for Bacterial Genome Assembly
 
-This pipeline is used for de-novo reference-guided assembly, which operates in three phases.
+DNRBG is an integrative pipeline for de novo and reference-guided bacterial genome assembly. The pipeline operates in three phases.
 
-1) **Pre-processing and Contig Generation:** The process begins with raw reads in FASTQ format. We first assess the quality of these reads, removing any low-quality sequences and Illumina adapters. The remaining short reads are assembled into contigs.
+1. **Pre-processing and contig generation:** Raw paired-end FASTQ reads are assessed for quality, and low-quality sequences and Illumina adapters are removed. The processed reads are then assembled into contigs.
+2. **Best-reference selection:** The best candidate reference genome is identified, and the percentage of alignment is calculated.
+3. **Reference-based scaffolding:** Reference-based scaffolding is performed to generate a reference-guided assembly.
 
-2) **Selection of best reference:** The best reference genome is identified, and the percentage alignment calculation is performed.
+## Dependencies
 
-3) **Reference-based scaffolding:**  Reference-based scaffolding is conducted.
+The pipeline uses the following tools:
 
+- **FastQC:** https://www.bioinformatics.babraham.ac.uk/projects/fastqc/
+- **MultiQC:** https://multiqc.info/docs/getting_started/installation/
+- **Trimmomatic:** https://github.com/usadellab/Trimmomatic
+- **FLASH:** https://ccb.jhu.edu/software/FLASH/
+- **Unicycler:** https://github.com/rrwick/Unicycler
+- **QUAST:** https://github.com/ablab/quast
+- **PlentyofBugs:** https://github.com/nickp60/plentyofbugs
+- **Bowtie2:** https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml
+- **AlignGraph:** https://github.com/baoe/AlignGraph
+- **BUSCO:** https://busco.ezlab.org/
 
-**Installation**
+Additional dependencies and executables may be required depending on the selected assembly configuration.
 
-This pipeline is available as a LINUX executable.**
+## Usage on Linux
 
-**Dependencies**
+The pipeline can be run using the `dnrbg.sh` shell script.
 
-This pipeline requires various dependencies.
+```bash
+./dnrbg.sh \
+  -1 /path/to/read1.fastq \
+  -2 /path/to/read2.fastq \
+  -g /path/to/reference_genome
+```
 
-1. **fastQC**
-Available at https://www.bioinformatics.babraham.ac.uk/projects/fastqc/
+Arguments:
 
-2. **multiQC**
-Available at https://multiqc.info/docs/getting_started/installation/
+- `-1`: Path to the forward FASTQ file.
+- `-2`: Path to the reverse FASTQ file.
+- `-g`: Directory containing candidate reference genome FASTA files.
 
-3. **Trimmomatic**
-Available at https://github.com/usadellab/Trimmomatic
+Additional parameters can be specified as needed. Run the following command to view the available options:
 
-4. **FLASH**
-Available at https://ccb.jhu.edu/software/FLASH/
+```bash
+./dnrbg.sh -h
+```
 
-5. **Unicycler**
-Available at https://github.com/rrwick/Unicycler
+## Running with Docker
 
-6. **QUAST**
-Available at https://github.com/ablab/quast
+### Install Docker
 
-7. **Plentyofbugs**
-Available at https://github.com/nickp60/plentyofbugs
+Install Docker by following the official instructions:
 
-8. **Bowtie2**
-Available at https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml
+https://docs.docker.com/engine/install/ubuntu/
 
-9. **AlignGraph**
-Available at https://github.com/baoe/AlignGraph
+### Pull the Docker image
 
-10. **BUSCO**
-Available at https://busco.ezlab.org/
+```bash
+docker pull mkulab/dnrbg_latest:v1.0
+```
 
+### Docker command
 
-**USAGE** 
+Make sure that your candidate reference genome directory is named `reference_genome`. The directory should contain the reference FASTA files used for candidate-reference selection.
 
-	./dnrgb.sh read1.fastq read2.fastq 
- 
- where fastq_1 and fastq_2 are raw sequences, paired-end read one and two, respectively. 
+Run the following command from the directory containing your paired-end reads:
 
-  **Docker**
-  To install docker you can see https://docs.docker.com/engine/install/ubuntu/.
-  To use docker please use pull command `docker pull somil131/dnrgb_genome_assembly:latest`.
+```bash
+docker run -it \
+  -v "$(pwd):/data" \
+  -v /path/to/reference_genome:/data/reference_genome \
+  mkulab/dnrbg_latest:v1.0 \
+  -1 /data/read1.fastq \
+  -2 /data/read2.fastq \
+  -g /data/reference_genome
+```
 
-  **Docker Command**
-  
-  please make sure that your reference genome directory is named as `reference_genome`.
+Replace `/path/to/reference_genome` with the actual path to the reference genome directory on your host system. Replace `read1.fastq` and `read2.fastq` with the actual FASTQ filenames located in the current working directory.
 
-  You can use the command as mentioned below:-
-  
-  `docker run -it -v $(pwd):/data -v /Path/to/reference_genome:/data/reference_genome somil131/dnrgb_genome_assembly:latest /data/path/to/Your_files_1.fastq /data/path/to/Your_files_2.fastq`
+Additional options can be supplied using the flags supported by `dnrbg.sh`.
 
-  **NEXTFLOW Command**
+## Running with Nextflow
 
-  `/path/to/nextflow run /path/to/DNRBG/scripts/dnrgb.nf \
-  --forward_read Path/to/forward/read \
-  --reverse_read Path/to/reverse/read \
-  --thread 24 \
+### Install Nextflow
+
+Install Nextflow using the official documentation:
+
+https://www.nextflow.io/docs/latest/install.html
+
+**Required version:** `25.04.2.5947`
+
+Check the installed version:
+
+```bash
+nextflow -version
+```
+
+### Run the pipeline
+
+Run `dnrbg.nf` using the following command. Replace the placeholder paths with the actual paths to the reads, adapter file, assembler, reference genomes, and padding script.
+
+```bash
+nextflow run dnrbg.nf \
+  --forward_read /path/to/forward.fastq \
+  --reverse_read /path/to/reverse.fastq \
+  --thread 4 \
   --phred 33 \
-  --PATH_TO_ADAPTER_CONTAM_FILE Path/to/adapters/files/TruSeq3-PE-2.fa \
+  --PATH_TO_ADAPTER_CONTAM_FILE /path/to/adapter/file \
   --leading 3 \
   --trailing 3 \
-  --slidingwindow '4:15' \
+  --slidingwindow 4:15 \
   --minlength 36 \
   --max_overlap 150 \
-  --assembler Path/to/skesa \
-  --reference_genome Path/to/reference/genome \
-  --pad_read_path Path/to/DNRBG/scripts/pad_reads_1.py \
+  --assembler /path/to/skesa \
+  --reference_genome /path/to/reference_genome \
+  --pad_read_path /path/to/pad_reads.py \
   --distancelow 100 \
   --distancehigh 1000 \
   --outputDir1 fastqc_out \
@@ -93,7 +126,13 @@ Available at https://busco.ezlab.org/
   --outputDir7 plentyofbugs_out \
   --outputDir8 bowtie2_out \
   --outputDir9 reference_based_assembly \
-  --outputDir10 busco`
+  --outputDir10 busco
+```
 
+### Parameters and output directories
 
-  
+Provide the correct paths for all required input files and executables. Adjust parameters such as thread count, Phred score, trimming settings, FLASH overlap, assembler, and alignment distances according to your requirements.
+
+The output directory parameters `--outputDir1` through `--outputDir10` correspond to the pipeline's individual output stages. Keep their names unchanged unless you also update the relevant workflow configuration.
+
+Ensure that `dnrbg.nf` and `pad_reads.py` are available at their specified paths and that the required software dependencies are installed or otherwise accessible to the workflow.
