@@ -190,19 +190,15 @@ ENV PATH="/opt/AlignGraph/AlignGraph:$PATH"
 # Set the working directory
 WORKDIR /opt/
 
-# RUN wget from source
-RUN  wget -O /opt/blatSrc34.zip https://users.soe.ucsc.edu/~kent/src/blatSrc34.zip
+# Download precompiled BLAT binaries
+RUN wget --no-check-certificate \
+    -O /opt/blatSuite.34.zip \
+    https://hgwdev.cse.ucsc.edu/~kent/exe/opteron/blatSuite.34.zip
 
-# Move the directory to its final destination inside the container and build blat
-RUN unzip /opt/blatSrc34.zip -d /opt/ && \
-    cd /opt/blatSrc/inc && \
-    sed -i 's/-Werror//g' common.mk && \
-    cd ../webBlat && \
-    sed -i 's/\$L/\$L -Wl,--allow-multiple-definition/g' makefile && \
-    cd /opt/blatSrc && \
-    mkdir -p ~/bin/x86_64 && \
-    make MACHTYPE=x86_64 && \
-    cp -puv ~/bin/x86_64/* /usr/local/bin/
+# Extract BLAT binaries
+RUN unzip /opt/blatSuite.34.zip -d /opt/ && \
+    find /opt -type f -name blat -exec cp -v {} /usr/local/bin/blat \; && \
+    chmod +x /usr/local/bin/blat
 
 # Add /usr/local/bin to PATH
 ENV PATH="/usr/local/bin:$PATH"
@@ -290,14 +286,14 @@ ENV PATH="/usr/local/bin:$PATH"
 WORKDIR /data
 
 # Copy the genome assembly script into the Docker image
-COPY dnrgb1.sh /usr/local/bin/
+COPY dnrbg.sh /usr/local/bin/
 COPY pad_reads_1.py /usr/local/bin/
 
 # Make the scripts executable
-RUN chmod +x /usr/local/bin/dnrgb1.sh /usr/local/bin/pad_reads_1.py
+RUN chmod +x /usr/local/bin/dnrbg.sh /usr/local/bin/pad_reads_1.py
 
 # Ensure /data is created as a volume mount point
 VOLUME ["/data"]
 
 # Set the entrypoint to the script and allow passing of input arguments
-ENTRYPOINT ["/usr/local/bin/dnrgb1.sh"]
+ENTRYPOINT ["/usr/local/bin/dnrbg.sh"]
