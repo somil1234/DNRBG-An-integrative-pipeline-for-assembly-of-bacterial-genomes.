@@ -832,7 +832,7 @@ main() {
     CURRENT_DIR=$(pwd)
 
     if [[ -n "$RESUME_DIR" ]]; then
-        WORK_DIR="$RESUME_DIR"
+        WORK_DIR="$(cd "$RESUME_DIR" && pwd -P)" || die "Cannot resolve resume directory: $RESUME_DIR"
     else
         WORK_DIR="$CURRENT_DIR/assembly_pipeline_$(date +%Y%m%d_%H%M%S)"
     fi
