@@ -399,8 +399,8 @@ run_unicycler() {
     local out; out=$(ensure_dir "$WORK_DIR/unicycler_out")
 
     "$unicycler_bin" \
-        -1 "$WORK_DIR/trimmomatic_out/output_1P.fq" \
-        -2 "$WORK_DIR/trimmomatic_out/output_2P.fq" \
+        -1 "$WORK_DIR/flash_out/out.notCombined_1.fastq" \
+        -2 "$WORK_DIR/flash_out/out.notCombined_2.fastq" \
         -s "$WORK_DIR/flash_out/out.extendedFrags.fastq" \
         -t "$THREADS" \
         -o "$out/assembly"
@@ -478,23 +478,23 @@ compute_alignment_rate() {
     local sam=$1
     local total aligned
 
-    if command -v samtools &>/dev/null; then
-        total=$(samtools view -c "$sam")
-        aligned=$(samtools view -F 4 -c "$sam")
-    elif awk 'BEGIN{exit !(and(1,1)==1)}' 2>/dev/null; then
-        total=$(grep -vc '^@' "$sam" || true)
-        aligned=$(awk '!/^@/ && and($2,4)==0' "$sam" | wc -l)
-    else
-        die "Need samtools or GNU awk for alignment-rate calculation."
-    fi
+    total=$(samtools view -S -c "$sam") ||
+        die "Failed to count total SAM records."
 
-    ALIGN_TOTAL=${total:-0}
-    ALIGN_ALIGNED=${aligned:-0}
+    aligned=$(samtools view -S -F 4 -c "$sam") ||
+        die "Failed to count mapped SAM records."
 
-    awk -v a="$ALIGN_ALIGNED" -v t="$ALIGN_TOTAL" \
-        'BEGIN { if (t > 0) printf "%.2f", (a/t)*100; else print "0.00" }'
+    ALIGN_TOTAL=$total
+    ALIGN_ALIGNED=$aligned
+
+    ALIGN_RATE=$(awk -v a="$aligned" -v t="$total" \
+        'BEGIN {
+            if (t > 0)
+                printf "%.2f", (a/t)*100
+            else
+                print "0.00"
+        }')
 }
-
 ###############################################################################
 # Phase 2.2 — Bowtie2 + threshold (asks user in BOTH cases)
 ###############################################################################
@@ -517,10 +517,9 @@ run_bowtie2() {
         -1 "$WORK_DIR/trimmomatic_out/output_1P.fq" \
         -2 "$WORK_DIR/trimmomatic_out/output_2P.fq" \
         -S "$out/out.sam"
-
-    local rate
-    rate=$(compute_alignment_rate "$out/out.sam")
-    ALIGN_RATE="$rate"
+local rate
+compute_alignment_rate "$out/out.sam"
+local rate="$ALIGN_RATE"
 
     cat > "$out/alignment_report.txt" <<EOF
 Bowtie2 Alignment Report
@@ -832,7 +831,7 @@ main() {
     CURRENT_DIR=$(pwd)
 
     if [[ -n "$RESUME_DIR" ]]; then
-        WORK_DIR="$(cd "$RESUME_DIR" && pwd -P)" || die "Cannot resolve resume directory: $RESUME_DIR"
+        WORK_DIR="$(cd "$RESUME_DIR" && pwd -P)" || die "Cannot resolve resume directory: $RESUME_DIR" 
     else
         WORK_DIR="$CURRENT_DIR/assembly_pipeline_$(date +%Y%m%d_%H%M%S)"
     fi
