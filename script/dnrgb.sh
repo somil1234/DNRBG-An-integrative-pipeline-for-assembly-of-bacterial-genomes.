@@ -10,7 +10,9 @@
 #
 # AlignGraph output:
 #   sample_extendedcontig.fasta  +  sample_remainingcontig.fasta
-#   are merged into one complete assembly for QUAST and BUSCO.
+#   are merged into ONE complete assembly file (with unique ext_/rem_
+#   prefixes to avoid contig-ID collisions) which is then used for
+#   both QUAST and BUSCO.
 #
 set -euo pipefail
 
@@ -409,7 +411,7 @@ run_unicycler() {
 }
 
 ###############################################################################
-# QUAST (reusable) — accepts one or more FASTA files
+# QUAST (reusable) — accepts ONE or more FASTA files
 ###############################################################################
 run_quast() {
     local label=$1
@@ -629,6 +631,23 @@ run_aligngraph() {
 }
 
 ###############################################################################
+# Merge extended + remaining into ONE FASTA with unique ext_/rem_ prefixes
+###############################################################################
+merge_aligngraph_outputs() {
+    local ext=$1
+    local rem=$2
+    local merged=$3
+
+    : > "$merged"
+    if [[ -s "$ext" ]]; then
+        awk '/^>/{sub(/^>/,">ext_"); print; next} {print}' "$ext" >> "$merged"
+    fi
+    if [[ -s "$rem" ]]; then
+        awk '/^>/{sub(/^>/,">rem_"); print; next} {print}' "$rem" >> "$merged"
+    fi
+}
+
+###############################################################################
 # Phase 2.4 — BUSCO (extended + remaining merged into one file)
 ###############################################################################
 run_busco() {
@@ -637,14 +656,13 @@ run_busco() {
 
     local out; out=$(ensure_dir "$WORK_DIR/busco_out")
 
-    # Merge extended + remaining into one complete assembly file
     local ext="$WORK_DIR/reference_based_assembly/sample_extendedcontig.fasta"
     local rem="$WORK_DIR/reference_based_assembly/sample_remainingcontig.fasta"
     local input="$out/complete_assembly_for_busco.fasta"
 
     if [[ -s "$ext" || -s "$rem" ]]; then
-        cat "$ext" "$rem" 2>/dev/null > "$input"
-        log "BUSCO input: $input (extended + remaining merged)"
+        merge_aligngraph_outputs "$ext" "$rem" "$input"
+        log "BUSCO input: $input (extended + remaining merged, $(grep -c '^>' "$input") contigs, $(awk '/^>/{next}{s+=length}END{print s}' "$input") bp)"
     else
         input="$WORK_DIR/unicycler_out/assembly/assembly.fasta"
         log "BUSCO input: $input (fallback to de-novo)"
@@ -690,6 +708,7 @@ write_summary_report() {
 
     local denovo_quast="$WORK_DIR/quast_out/quast_output/report.tsv"
     local refguided_quast="$WORK_DIR/quast2_out/quast_output/report.tsv"
+    local merged_quast_asm="$WORK_DIR/reference_based_assembly/complete_assembly_for_quast.fasta"
 
     local best_ref="NA"
     if [[ -f "$WORK_DIR/plentyofbugs_out/best_reference" ]]; then
@@ -702,9 +721,18 @@ write_summary_report() {
             "$WORK_DIR/busco_out/busco_run/short_summary"*.txt 2>/dev/null | head -1 | sed 's/^[[:space:]]*//')
     fi
 
-    # Which files were used for ref-guided QC?
-    local refguided_used="$ALIGNGRAPH_USED_FILE"
-    [[ -n "$refguided_used" ]] || refguided_used="$refguided_dir/sample_extendedcontig.fasta + $refguided_dir/sample_remainingcontig.fasta (merged)"
+    # Stats of the merged ref-guided assembly actually fed to QUAST/BUSCO
+    local merged_contigs="NA"
+    local merged_bp="NA"
+    if [[ -s "$merged_quast_asm" ]]; then
+        merged_contigs=$(grep -c '^>' "$merged_quast_asm")
+        merged_bp=$(awk '/^>/{next}{s+=length}END{print s}' "$merged_quast_asm")
+    fi
+
+    local refguided_used="NA"
+    if [[ -s "$merged_quast_asm" ]]; then
+        refguided_used="$merged_quast_asm"
+    fi
 
     {
         echo "======================================================================"
@@ -770,12 +798,16 @@ write_summary_report() {
             echo "  Status             : $ALIGNGRAPH_STATUS"
             echo "  Extended contigs   : $refguided_dir/sample_extendedcontig.fasta"
             echo "  Remaining contigs  : $refguided_dir/sample_remainingcontig.fasta"
-            echo "  Used for QC        : $refguided_used"
+            echo "  Extended count     : $(grep -c '^>' "$refguided_dir/sample_extendedcontig.fasta" 2>/dev/null || echo 0)"
+            echo "  Remaining count    : $(grep -c '^>' "$refguided_dir/sample_remainingcontig.fasta" 2>/dev/null || echo 0)"
+            echo "  Merged assembly    : $refguided_used"
+            echo "  Merged contigs     : $merged_contigs"
+            echo "  Merged total bp    : $merged_bp"
             echo "  distanceLow        : $DIST_LOW"
             echo "  distanceHigh       : $DIST_HIGH"
             echo ""
             echo "QUAST (ref-guided)   : $WORK_DIR/quast2_out/quast_output/report.tsv"
-            echo "  Input              : extended + remaining (merged)"
+            echo "  Input              : extended + remaining (merged, unique ext_/rem_)"
             echo "  # contigs          : $(quast_metric "$refguided_quast" '# contigs')"
             echo "  Largest contig     : $(quast_metric "$refguided_quast" 'Largest contig')"
             echo "  Total length       : $(quast_metric "$refguided_quast" 'Total length')"
@@ -922,20 +954,22 @@ main() {
         fi
     fi
 
-    # Ref-guided QUAST: extended + remaining merged into one complete assembly
+    # ---- Ref-guided QUAST: merge extended + remaining into ONE file ----
     local ref_ext="$WORK_DIR/reference_based_assembly/sample_extendedcontig.fasta"
     local ref_rem="$WORK_DIR/reference_based_assembly/sample_remainingcontig.fasta"
+    local merged_asm="$WORK_DIR/reference_based_assembly/complete_assembly_for_quast.fasta"
 
-    local -a refguided_inputs=()
-    [[ -s "$ref_ext" ]] && refguided_inputs+=("$ref_ext")
-    [[ -s "$ref_rem" ]] && refguided_inputs+=("$ref_rem")
-    if [[ ${#refguided_inputs[@]} -eq 0 ]]; then
-        refguided_inputs=("$WORK_DIR/unicycler_out/assembly/assembly.fasta")
+    if [[ -s "$ref_ext" || -s "$ref_rem" ]]; then
+        merge_aligngraph_outputs "$ref_ext" "$ref_rem" "$merged_asm"
+        log "Merged ref-guided assembly: $merged_asm ($(grep -c '^>' "$merged_asm") contigs, $(awk '/^>/{next}{s+=length}END{print s}' "$merged_asm") bp)"
+    else
+        merged_asm="$WORK_DIR/unicycler_out/assembly/assembly.fasta"
+        log "Merged ref-guided assembly (fallback to de-novo): $merged_asm"
     fi
 
     run_step "10_quast_refguided" run_quast "reference-guided" \
         "$WORK_DIR/quast2_out" \
-        "${refguided_inputs[@]}"
+        "$merged_asm"
 
     run_step "11_busco" run_busco
 
