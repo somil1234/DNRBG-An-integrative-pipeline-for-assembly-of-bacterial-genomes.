@@ -399,8 +399,8 @@ run_unicycler() {
     local out; out=$(ensure_dir "$WORK_DIR/unicycler_out")
 
     "$unicycler_bin" \
-        -1 "$WORK_DIR/flash_out/out.notCombined_1.fastq" \
-        -2 "$WORK_DIR/flash_out/out.notCombined_2.fastq" \
+        -1 "$WORK_DIR/trimmomatic_out/out.notCombined_1.fastq" \ # changed from OUTPUT_1.fa
+        -2 "$WORK_DIR/trimmomatic_out/out.notCombined_1.fastq" \ # changed from OUTPUT_2.fa
         -s "$WORK_DIR/flash_out/out.extendedFrags.fastq" \
         -t "$THREADS" \
         -o "$out/assembly"
