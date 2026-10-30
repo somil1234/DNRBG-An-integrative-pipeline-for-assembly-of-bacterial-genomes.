@@ -15,11 +15,11 @@ params.trailing      = 3
 params.slidingwindow = '4:15'
 params.minlength     = 36
 params.max_overlap   = 10
-params.assembler     = 'skesa'          // name, not path
-params.reference_genome = null          // dir with reference FASTAs
+params.assembler     = 'skesa'
+params.reference_genome = null
 params.pad_read_path = null
 params.pad_read_len  = 150
-params.distancelow   = 100
+params.distancelow   = 200
 params.distancehigh  = 1000
 params.busco_lineage = 'bacteria_odb10'
 params.align_threshold = 75
@@ -97,7 +97,6 @@ process FLASH {
     """
 }
 
-// ----- FIXED: Unicycler now consumes FLASH output (like the bash) -----
 process UNICYCLER {
     publishDir "${params.outdir}/unicycler_out", mode: 'copy'
     input:
@@ -124,7 +123,7 @@ process QUAST_DENOVO {
     path "quast_out", emit: quast_out
     script:
     """
-    quast.py -o quast_out -t ${params.thread} --min-contig 0 \\
+    quast -o quast_out -t ${params.thread} --min-contig 0 \\
         ${unicycler_out}/assembly/assembly.fasta
     """
 }
@@ -276,61 +275,69 @@ process ALIGNGRAPH {
     """
 }
 
-// ----- Bash-equivalent AlignGraph fallback -----
-process SELECT_ASSEMBLY {
+// ============================================================
+// MERGE: extended + remaining → one complete assembly file
+// ============================================================
+process MERGE_ALIGNGRAPH {
     publishDir "${params.outdir}/reference_based_assembly", mode: 'copy'
     input:
     path extended
     path remaining
     path unicycler_out
     output:
-    path "selected_assembly.fasta", emit: selected
-    path "selection_report.txt",   emit: report
+    path "complete_assembly.fasta", emit: complete
+    path "merge_report.txt",        emit: report
     script:
     """
-    if [ -s ${extended} ]; then
-        cp ${extended} selected_assembly.fasta
-        echo "STATUS=OK"                 > selection_report.txt
-        echo "USED=extended_contigs"    >> selection_report.txt
+    # Merge extended + remaining into one complete assembly
+    if [ -s ${extended} ] && [ -s ${remaining} ]; then
+        cat ${extended} ${remaining} > complete_assembly.fasta
+        echo "STATUS=OK"                                > merge_report.txt
+        echo "MODE=extended+remaining"                  >> merge_report.txt
+        echo "Extended contigs: \$(grep -c '^>' ${extended})"   >> merge_report.txt
+        echo "Remaining contigs: \$(grep -c '^>' ${remaining})"  >> merge_report.txt
+    elif [ -s ${extended} ]; then
+        cp ${extended} complete_assembly.fasta
+        echo "STATUS=EXTENDED_ONLY"                     > merge_report.txt
+        echo "MODE=extended_only"                       >> merge_report.txt
     elif [ -s ${remaining} ]; then
-        cp ${remaining} selected_assembly.fasta
-        echo "STATUS=FALLBACK"                  > selection_report.txt
-        echo "USED=remaining_contigs"          >> selection_report.txt
-        echo "NOTE: extendedContig was empty"  >> selection_report.txt
-    elif [ -s ${unicycler_out}/assembly/assembly.fasta ]; then
-        cp ${unicycler_out}/assembly/assembly.fasta selected_assembly.fasta
-        echo "STATUS=DENOVO_FALLBACK"           > selection_report.txt
-        echo "USED=de_novo_assembly"           >> selection_report.txt
+        cp ${remaining} complete_assembly.fasta
+        echo "STATUS=REMAINING_ONLY"                    > merge_report.txt
+        echo "MODE=remaining_only"                      >> merge_report.txt
     else
-        echo "ERROR: no non-empty assembly" >&2
-        exit 1
+        cp ${unicycler_out}/assembly/assembly.fasta complete_assembly.fasta
+        echo "STATUS=DENOVO_FALLBACK"                   > merge_report.txt
+        echo "MODE=de_novo_fallback"                    >> merge_report.txt
     fi
-    cat selection_report.txt
+
+    echo "Total contigs: \$(grep -c '^>' complete_assembly.fasta)" >> merge_report.txt
+    echo "Total bp: \$(awk '/^>/{next}{s+=length}END{print s}' complete_assembly.fasta)" >> merge_report.txt
+    cat merge_report.txt
     """
 }
 
 process QUAST_REFGUIDED {
     publishDir "${params.outdir}/quast2_out", mode: 'copy'
     input:
-    path selected_asm
+    path complete_asm
     output:
     path "quast_out", emit: quast_out
     script:
     """
-    quast.py -o quast_out -t ${params.thread} --min-contig 0 ${selected_asm}
+    quast -o quast_out -t ${params.thread} --min-contig 0 ${complete_asm}
     """
 }
 
 process BUSCO {
     publishDir "${params.outdir}/busco_out", mode: 'copy'
     input:
-    path selected_asm
+    path complete_asm
     output:
     path "busco_out", emit: busco_out
     script:
     """
     mkdir -p busco_out
-    busco -i ${selected_asm} -m genome -l ${params.busco_lineage} \\
+    busco -i ${complete_asm} -m genome -l ${params.busco_lineage} \\
         -c ${params.thread} -o busco_run --out_path busco_out
     """
 }
@@ -354,7 +361,7 @@ workflow {
     MULTIQC(FASTQC.out.out_dir)
     TRIMMOMATIC(fwd, rev, params.PATH_TO_ADAPTER_CONTAM_FILE)
     FLASH(TRIMMOMATIC.out.trim_out)
-    UNICYCLER(FLASH.out.flash_out)                     // <- now fed by FLASH
+    UNICYCLER(FLASH.out.flash_out)
     QUAST_DENOVO(UNICYCLER.out.unicycler_out)
 
     // Phase 2
@@ -371,11 +378,15 @@ workflow {
         PAD_READ.out.padded2,
         params.reference_genome
     )
-    SELECT_ASSEMBLY(
+
+    // Merge extended + remaining → complete assembly
+    MERGE_ALIGNGRAPH(
         ALIGNGRAPH.out.extended,
         ALIGNGRAPH.out.remaining,
         UNICYCLER.out.unicycler_out
     )
-    QUAST_REFGUIDED(SELECT_ASSEMBLY.out.selected)
-    BUSCO(SELECT_ASSEMBLY.out.selected)
+
+    // QUAST + BUSCO on merged complete assembly
+    QUAST_REFGUIDED(MERGE_ALIGNGRAPH.out.complete)
+    BUSCO(MERGE_ALIGNGRAPH.out.complete)
 }
