@@ -27,12 +27,6 @@ Additional dependencies and executables may be required depending on the selecte
 
 The pipeline can be run using the `dnrbg.sh` shell script.
 
-```bash
-./dnrbg.sh \
-  -1 /path/to/read1.fastq \
-  -2 /path/to/read2.fastq \
-  -g /path/to/reference_genome
-```
 ```
 Arguments:
 
