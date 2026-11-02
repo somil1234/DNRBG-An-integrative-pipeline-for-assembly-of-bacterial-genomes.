@@ -33,7 +33,7 @@ The pipeline can be run using the `dnrbg.sh` shell script.
   -2 /path/to/read2.fastq \
   -g /path/to/reference_genome
 ```
-
+```
 Arguments:
 
 Usage:
@@ -70,13 +70,7 @@ Other tools:
   -m INT         Alignment-rate threshold %    (default: 75)
   -S             Skip Phase 2
   -h             Show this help
-  
-Additional parameters can be specified as needed. Run the following command to view the available options:
-
-```bash
-./dnrbg.sh -h
-```
-
+  ```
 ## Running with Docker
 
 ### Install Docker
