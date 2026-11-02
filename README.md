@@ -101,32 +101,24 @@ nextflow -version
 Run `dnrbg.nf` using the following command. Replace the placeholder paths with the actual paths to the reads, adapter file, assembler, reference genomes, and padding script.
 
 ```bash
-nextflow run dnrbg.nf \
-  --forward_read /path/to/forward.fastq \
-  --reverse_read /path/to/reverse.fastq \
-  --thread 4 \
-  --phred 33 \
-  --PATH_TO_ADAPTER_CONTAM_FILE /path/to/adapter/file \
-  --leading 3 \
-  --trailing 3 \
-  --slidingwindow 4:15 \
-  --minlength 36 \
-  --max_overlap 150 \
-  --assembler /path/to/skesa \
-  --reference_genome /path/to/reference_genome \
-  --pad_read_path /path/to/pad_reads.py \
-  --distancelow 100 \
-  --distancehigh 1000 \
-  --outputDir1 fastqc_out \
-  --outputDir2 multiqc_out \
-  --outputDir3 trimmomatic_out \
-  --outputDir4 flash_out \
-  --outputDir5 unicycler_out \
-  --outputDir6 quast_out \
-  --outputDir7 plentyofbugs_out \
-  --outputDir8 bowtie2_out \
-  --outputDir9 reference_based_assembly \
-  --outputDir10 busco
+--forward_read	Required
+--reverse_read	Required
+--reference_genome	Required
+--pad_read_path	Required
+--thread	4
+--phred	33
+--leading	3
+--trailing	3
+--slidingwindow	4:15
+--minlength	36
+--max_overlap	10
+--assembler	skesa
+--pad_read_len	150
+--distancelow	100
+--distancehigh	1000
+--busco_lineage	bacteria_odb10
+--align_threshold	75
+--outdir	results
 ```
 
 ### Parameters and output directories
