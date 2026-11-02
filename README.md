@@ -100,7 +100,9 @@ nextflow -version
 
 Run `dnrbg.nf` using the following command. Replace the placeholder paths with the actual paths to the reads, adapter file, assembler, reference genomes, and padding script.
 
-```bash
+```
+  bash
+  nextflow run dnrbg.nf 
 --forward_read	Required
 --reverse_read	Required
 --reference_genome	Required
