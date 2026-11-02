@@ -59,7 +59,7 @@ Other tools:
   -b STR         BUSCO lineage                 (default: bacteria_odb10)
   -C FILE        Path to pad_reads_1.py
   -R INT         Read length for padding       (default: 150)
-  -d INT         AlignGraph --distanceLow      (default: 200)
+  -d INT         AlignGraph --distanceLow      (default: 100)
   -D INT         AlignGraph --distanceHigh     (default: 1000)
   -m INT         Alignment-rate threshold %    (default: 75)
   -S             Skip Phase 2
